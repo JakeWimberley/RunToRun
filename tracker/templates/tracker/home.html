@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<p>Logged in as {{ request.user.username }}</p>
+<ul>
+{% for event in events %}
+	<li>{{ event }}</li>
+{% endfor %}
+</ul>
+</body>
+</html>
