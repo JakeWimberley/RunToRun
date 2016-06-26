@@ -1,7 +1,19 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 dateFormatStr = '%H%Mz %a %b %d'
+
+#class UserInterface(models.Model):
+# https://docs.djangoproject.com/en/1.9/topics/auth/customizing/#extending-user
+# https://djangosnippets.org/snippets/1261/
+#	user = models.OneToOneField(User, on_delete=models.CASCADE)
+#	colorFore = ColorField(blank=True)
+#	colorBack = ColorField(blank=True)
+
+class Pin(models.Model):
+	owner = models.ForeignKey('auth.User')
+	event = models.ForeignKey('Event')
 
 class Chart(models.Model):
 	validDate = models.DateTimeField(default=timezone.now)
@@ -24,6 +36,7 @@ class Event(models.Model):
 	owner = models.ForeignKey('auth.User')
 	discussions = models.ManyToManyField(Discussion,verbose_name='discussion timeline',blank=True)
 	isPublic = models.BooleanField(default=False,verbose_name='share this event with other users')
+	isPermanent = models.BooleanField(default=False,verbose_name="keep this event forever")
 
 	def __str__(self):
 		allDiscussionDates = [x.validDate for x in self.discussions.all()]
