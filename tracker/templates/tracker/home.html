@@ -4,8 +4,15 @@
 </head>
 <body>
 <p>Logged in as {{ request.user.username }}</p>
+<h2>Pinned events</h2>
 <ul>
-{% for event in events %}
+{% for event in pinned %}
+	<li>{{ event }}</li>
+{% endfor %}
+</ul>
+<h2>Timeline</h2>
+<ul>
+{% for event in timelineEvents %}
 	<li>{{ event }}</li>
 {% endfor %}
 </ul>

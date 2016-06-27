@@ -15,6 +15,9 @@ class Pin(models.Model):
 	owner = models.ForeignKey('auth.User')
 	event = models.ForeignKey('Event')
 
+	def __str__(self):
+		return str(self.event)
+
 class Chart(models.Model):
 	validDate = models.DateTimeField(default=timezone.now)
 	title = models.CharField(max_length=120)
