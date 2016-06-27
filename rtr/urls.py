@@ -1,4 +1,6 @@
 """
+    Copyright 2016 Jake Wimberley.
+
     This file is part of RunToRun.
 
     RunToRun is free software: you can redistribute it and/or modify
