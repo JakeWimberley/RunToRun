@@ -15,7 +15,8 @@
 
     You should have received a copy of the GNU General Public License
     along with RunToRun.  If not, see <http://www.gnu.org/licenses/>.
-"""rtr URL Configuration
+
+rtr URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/1.9/topics/http/urls/

@@ -18,14 +18,27 @@
 """
 from django.shortcuts import render
 from django.db.models import Q
-from .models import Event, Pin
+from .models import Discussion, Event, Pin
+from .forms import DiscussionForm
 
 # Create your views here.
 
 def home(request):
 	timelineEvents = Event.objects.filter(Q(owner=request.user)|Q(isPublic=True))
 	pinned = Pin.objects.filter(owner=request.user)
+	if request.method == 'POST':
+		newDiscussion = DiscussionForm(request.POST,eventList=pinned)
+		if newDiscussion.is_valid():
+			_valid = newDiscussion.cleaned_data['_valid']
+			_text = newDiscussion.cleaned_data['_text']
+			_event = newDiscussion.cleaned_data['_event']
+			discoObj = Discussion(author=request.user,validDate=_valid,text=_text)
+			discoObj.save()
+			return HttpResponseRedirect('/')
+	else:
+		newDiscussion = DiscussionForm(eventChoices=pinned)
 	return render(request, 'tracker/home.html', { \
     'timelineEvents': timelineEvents, \
     'pinned': pinned, \
+    'newDiscussion': newDiscussion
   })
