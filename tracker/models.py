@@ -45,6 +45,7 @@ class Chart(models.Model):
 
 class Discussion(models.Model):
 	author = models.ForeignKey('auth.User')
+	createdDate = models.DateTimeField(default=timezone.now)
 	validDate = models.DateTimeField(default=timezone.now)
 	text = models.TextField()
 
