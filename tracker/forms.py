@@ -12,3 +12,6 @@ class DiscussionForm(forms.Form):
     _validDate = forms.DateField(label='valid date',widget=jqDateInput)
     _validTime = forms.TimeField(label='valid time',widget=jqTimeInput)
     _text = forms.CharField(label='discussion')
+
+class DiscussionFormTextOnly(forms.Form):
+    _text = forms.CharField(label='discussion')

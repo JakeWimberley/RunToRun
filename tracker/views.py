@@ -20,7 +20,7 @@ from django.shortcuts import render
 from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse
 from .models import Discussion, Event, Pin
-from .forms import DiscussionForm
+from .forms import DiscussionForm, DiscussionFormTextOnly
 import datetime
 import pytz
 import re
@@ -41,6 +41,7 @@ def home(request):
 			_valid = _valid.replace(tzinfo=pytz.UTC)
 			listStart = _valid.strftime('%Y%m%d_0000')
 			listEnd = _valid.strftime('%Y%m%d_2359')
+# TODO use _event
 			discoObj = Discussion(author=request.user,validDate=_valid,text=_text)
 			discoObj.save()
 			return HttpResponseRedirect('/discussions/{0:s}/{1:s}'.format(listStart,listEnd))
@@ -60,7 +61,39 @@ def discussionRange(request, _timeFrom, _timeTo):
 		timeFrom = datetime.datetime(int(tF.group(1),10),int(tF.group(2),10),int(tF.group(3),10),int(tF.group(4),10),int(tF.group(5),10),second=0,tzinfo=pytz.UTC)
 		timeTo = datetime.datetime(int(tT.group(1),10),int(tT.group(2),10),int(tT.group(3),10),int(tT.group(4),10),int(tT.group(5),10),second=59,tzinfo=pytz.UTC)
 #timeTo = datetime.datetime(tT.match(1),tT.match(2),tT.match(3),tT.match(4),tT.match(5),tzinfo=pytz.UTC)
-		discos = Discussion.objects.filter(validDate__gte=timeFrom,validDate__lte=timeTo)
+		discos = Discussion.objects.filter(validDate__gte=timeFrom,validDate__lte=timeTo).order_by('validDate','-createdDate')
+	return render(request, 'tracker/discussionRange.html', { \
+    'discussions': discos, \
+    'timeFrom': timeFrom, \
+		'timeTo': timeTo
+  })
+
+def concurrentDiscussion(request, _id):
+	"A standalone discussion form with the validDate and event defined by an existing discussion."
+	parent = Discussion.objects.get(id=_id)
+	_valid = parent.validDate
+	if request.method == 'POST':
+		newDiscussion = DiscussionFormTextOnly(request.POST)
+		if newDiscussion.is_valid():
+			_text = newDiscussion.cleaned_data['_text']
+			listStart = _valid.strftime('%Y%m%d_0000')
+			listEnd = _valid.strftime('%Y%m%d_2359')
+# TODO use _event
+			discoObj = Discussion(author=request.user,validDate=_valid,text=_text)
+			discoObj.save()
+			return HttpResponseRedirect('/discussions/{0:s}/{1:s}'.format(listStart,listEnd))
+	else:
+		textBox = DiscussionFormTextOnly()
+	return render(request, 'tracker/concurrentDiscussion.html', {
+		'id': _id,
+		'validTime': _valid,
+		'discussionTextBox': textBox,
+	})
+
+def allDiscussions(request):
+	discos = Discussion.objects.all().order_by('validDate','-createdDate')
+	timeFrom = 'the beginning of time'
+	timeTo = 'the end of time'
 	return render(request, 'tracker/discussionRange.html', { \
     'discussions': discos, \
     'timeFrom': timeFrom, \

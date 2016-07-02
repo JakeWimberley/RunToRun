@@ -26,6 +26,8 @@
 <h3>{{ disco.validDate }}</h3>
 <h4>(created at {{ disco.createdDate }})</h4>
 <p>{{ disco.text }}</p>
+{% url 'addConcurrent' disco.id as concurrentUrl %}
+<p><a href="{{ concurrentUrl }}">Add another discussion valid at this time</a></p>
 {% endfor %}
 </body>
 </html>
