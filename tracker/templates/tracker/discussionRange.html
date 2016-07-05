@@ -18,6 +18,7 @@
     along with RunToRun.  If not, see <http://www.gnu.org/licenses/>.
 -->
 {% extends 'tracker/base.html' %}
+{% load dictGet %}
 {% block content %}
 <script>
 	document.getElementById('nameOfView').innerHTML = 'Discussions from {{ timeFrom }} to {{ timeTo }}';
@@ -29,15 +30,17 @@
 {% for validDate in validDates %}
 <h2>Valid {{ validDate }}</h2>
 <div class="concurrentDiscussions">
-{% for disco in discussions.validDate %}
+{% for disco in discussions|dictGet:validDate %}
 	<h3>Created {{ disco.createdDate }}</h3>
 	<div>
 		<p>{{ disco.text }}</p>
 	</div>
-{% endfor %}
+{% if forloop.last %}
 {% url 'addConcurrent' disco.id as concurrentUrl %}
 	<h3>Add another discussion valid at this time</h3>
 	<div><a href="{{ concurrentUrl }}">Click here</a></div>
+{% endif %}
+{% endfor %}
 </div>
 {% endfor %}
 {% endblock content %}
