@@ -17,7 +17,7 @@
     along with RunToRun.  If not, see <http://www.gnu.org/licenses/>.
 """
 from django.shortcuts import render
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import HttpResponseRedirect, HttpResponse
 from .models import Discussion, Event, Pin
 from .forms import DiscussionForm, DiscussionFormTextOnly
@@ -61,11 +61,15 @@ def discussionRange(request, _timeFrom, _timeTo):
 		timeFrom = datetime.datetime(int(tF.group(1),10),int(tF.group(2),10),int(tF.group(3),10),int(tF.group(4),10),int(tF.group(5),10),second=0,tzinfo=pytz.UTC)
 		timeTo = datetime.datetime(int(tT.group(1),10),int(tT.group(2),10),int(tT.group(3),10),int(tT.group(4),10),int(tT.group(5),10),second=59,tzinfo=pytz.UTC)
 #timeTo = datetime.datetime(tT.match(1),tT.match(2),tT.match(3),tT.match(4),tT.match(5),tzinfo=pytz.UTC)
-		discos = Discussion.objects.filter(validDate__gte=timeFrom,validDate__lte=timeTo).order_by('validDate','-createdDate')
+		vDates = [v['validDate'] for v in Discussion.objects.filter(validDate__gte=timeFrom,validDate__lte=timeTo).order_by('validDate').values('validDate').annotate(Count('validDate',distinct=True))]
+		discos = {}
+		for vDate in vDates:
+			discos[vDate] = Discussion.objects.filter(validDate=vDate).order_by('-createdDate')
 	return render(request, 'tracker/discussionRange.html', { \
+    'validDates': vDates, \
     'discussions': discos, \
     'timeFrom': timeFrom, \
-		'timeTo': timeTo
+    'timeTo': timeTo
   })
 
 def concurrentDiscussion(request, _id):
@@ -91,10 +95,14 @@ def concurrentDiscussion(request, _id):
 	})
 
 def allDiscussions(request):
-	discos = Discussion.objects.all().order_by('validDate','-createdDate')
+	vTimes = [x['validDate'] for x in Discussion.objects.all().order_by('validDate').values('validDate').annotate(Count('validDate',distinct=True))]
+	discos = []
+	for vTime in vTimes:
+		discos.append(Discussion.objects.filter(validDate=vTime).order_by('-createdDate'))
 	timeFrom = 'the beginning of time'
 	timeTo = 'the end of time'
 	return render(request, 'tracker/discussionRange.html', { \
+    'validTimes': vTimes, \
     'discussions': discos, \
     'timeFrom': timeFrom, \
 		'timeTo': timeTo

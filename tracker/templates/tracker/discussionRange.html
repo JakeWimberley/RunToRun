@@ -25,13 +25,16 @@
 		$( ".concurrentDiscussions" ).accordion();
 	});
 </script>
-{% for disco in discussions %}
-<h2>{{ disco.validDate }}</h3>
+<!-- http://stackoverflow.com/questions/2024660/django-sort-dict-in-template -->
+{% for validDate in validDates %}
+<h2>Valid {{ validDate }}</h2>
 <div class="concurrentDiscussions">
-	<h3>(created at {{ disco.createdDate }})</h3>
+{% for disco in discussions.validDate %}
+	<h3>Created {{ disco.createdDate }}</h3>
 	<div>
 		<p>{{ disco.text }}</p>
 	</div>
+{% endfor %}
 {% url 'addConcurrent' disco.id as concurrentUrl %}
 	<h3>Add another discussion valid at this time</h3>
 	<div><a href="{{ concurrentUrl }}">Click here</a></div>
