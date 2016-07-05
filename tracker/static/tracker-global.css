@@ -1,0 +1,25 @@
+body {
+	font-family: 'Noto Sans', sans-serif;
+}
+p.footer {
+	border: 1px solid black;
+	font-size: 0.75em;
+}
+p.header {
+	font-size: 1.25em;
+}
+p.header, p.footer {
+	padding: 5px 5px 5px 5px;
+}
+span.leftHalf {
+	left: 0%;
+	width: 50%;
+	display: inline-block;
+	text-align: left;
+}
+span.rightHalf {
+	left: 50%;
+	width: 50%;
+	display: inline-block;
+	text-align: right;
+}

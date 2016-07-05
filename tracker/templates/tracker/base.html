@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+<head>
+	<title>RunToRun</title>
+	<link rel="stylesheet" href="{% static "tracker-global.css" %}">
+	<link rel="stylesheet" href="{% static "jquery-ui.min.css" %}">
+	<script src="{% static "external/jquery/jquery.js" %}"></script>
+	<script src="{% static "jquery-ui.min.js" %}"></script>
+	<link href="https://fonts.googleapis.com/css?family=Noto+Sans:400,700" rel="stylesheet">
+	<script>
+$( document ).ready(function() {
+	$(".uiDatepicker").datepicker({
+		dateFormat: 'yy-mm-dd'
+	});
+});
+	</script>
+</head>
+<body>
+	<p class="header ui-widget-header ui-corner-all"><span class="leftHalf">RunToRun: <span id="nameOfView">Home</span></span><span class="rightHalf">You are logged in as {{ request.user.username }}</span></p>
+	{% block content %}
+	{% endblock %}
+	<p class="footer ui-corner-all">RunToRun is open-source software, licensed under the GNU General Public License, version 3.</p>
+</body>
+</html>

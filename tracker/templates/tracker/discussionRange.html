@@ -17,17 +17,24 @@
     You should have received a copy of the GNU General Public License
     along with RunToRun.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<html>
-<head>
-</head>
-<body>
-<h2>Discussions: {{ timeFrom }} to {{ timeTo }}</h2>
+{% extends 'tracker/base.html' %}
+{% block content %}
+<script>
+	document.getElementById('nameOfView').innerHTML = 'Discussions from {{ timeFrom }} to {{ timeTo }}';
+	$(function() {
+		$( ".concurrentDiscussions" ).accordion();
+	});
+</script>
 {% for disco in discussions %}
-<h3>{{ disco.validDate }}</h3>
-<h4>(created at {{ disco.createdDate }})</h4>
-<p>{{ disco.text }}</p>
+<h2>{{ disco.validDate }}</h3>
+<div class="concurrentDiscussions">
+	<h3>(created at {{ disco.createdDate }})</h3>
+	<div>
+		<p>{{ disco.text }}</p>
+	</div>
 {% url 'addConcurrent' disco.id as concurrentUrl %}
-<p><a href="{{ concurrentUrl }}">Add another discussion valid at this time</a></p>
+	<h3>Add another discussion valid at this time</h3>
+	<div><a href="{{ concurrentUrl }}">Click here</a></div>
+</div>
 {% endfor %}
-</body>
-</html>
+{% endblock content %}
