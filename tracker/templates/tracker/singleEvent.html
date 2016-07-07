@@ -20,7 +20,8 @@
 {% extends 'tracker/base.html' %}
 {% block content %}
 <script>
-	document.getElementById('nameOfView').innerHTML = 'Discussions from {{ timeFrom }} to {{ timeTo }}';
+	document.getElementById('nameOfView').innerHTML = 'Event &quot;{{ event.title }}&quot;';
 </script>
+<p>created {{ event.createdDate }} by {{ event.owner }}</p>
 {% include 'tracker/thread.html' %}
 {% endblock content %}

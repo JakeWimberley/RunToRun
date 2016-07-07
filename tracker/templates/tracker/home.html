@@ -21,7 +21,8 @@
 <h2>Pinned events</h2>
 <ul>
 {% for event in pinned %}
-	<li>{{ event }}</li>
+{% url 'singleEvent' event.id as eventUrl %}
+	<li><a href="{{ eventUrl }}">{{ event }}</a></li>
 {% endfor %}
 </ul>
 <h2>Timeline</h2>

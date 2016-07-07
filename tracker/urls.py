@@ -24,4 +24,6 @@ urlpatterns = [
   url(r'^discussions/(\d{8}_\d{4})/(\d{8}_\d{4})/$', views.discussionRange),
   url(r'^discussions/$', views.allDiscussions),
   url(r'^addConcurrent/(\d+)/$', views.concurrentDiscussion, name='addConcurrent'),
+  url(r'^newEvent/$', views.newEvent, name='newEvent'),
+  url(r'^event/(\d+)/$', views.singleEvent, name='singleEvent'),
 ]

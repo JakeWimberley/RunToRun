@@ -20,7 +20,7 @@ from django.shortcuts import render
 from django.db.models import Q, Count
 from django.http import HttpResponseRedirect, HttpResponse
 from .models import Discussion, Event, Pin
-from .forms import DiscussionForm, DiscussionFormTextOnly
+from .forms import DiscussionForm, DiscussionFormTextOnly, EventForm
 import datetime
 import pytz
 import re
@@ -96,14 +96,55 @@ def concurrentDiscussion(request, _id):
 
 def allDiscussions(request):
 	vTimes = [x['validDate'] for x in Discussion.objects.all().order_by('validDate').values('validDate').annotate(Count('validDate',distinct=True))]
-	discos = []
+	discos = {}
 	for vTime in vTimes:
 		discos.append(Discussion.objects.filter(validDate=vTime).order_by('-createdDate'))
 	timeFrom = 'the beginning of time'
 	timeTo = 'the end of time'
 	return render(request, 'tracker/discussionRange.html', { \
-    'validTimes': vTimes, \
+    'validDates': vTimes, \
     'discussions': discos, \
     'timeFrom': timeFrom, \
 		'timeTo': timeTo
+  })
+
+def newEvent(request):
+	if request.method == 'POST':
+		newEvent = EventForm(request.POST)
+		if newEvent.is_valid():
+			_title = newEvent.cleaned_data['_title']
+			_startDate = newEvent.cleaned_data['_startDate']
+			_startTime = newEvent.cleaned_data['_startTime']
+			_endDate = newEvent.cleaned_data['_endDate']
+			_endTime = newEvent.cleaned_data['_endTime']
+			_isPublic = newEvent.cleaned_data['_isPublic']
+			_isPermanent = newEvent.cleaned_data['_isPermanent']
+			_start = datetime.datetime.combine(_startDate,_startTime).replace(tzinfo=pytz.UTC)
+			_end = datetime.datetime.combine(_endDate,_endTime).replace(tzinfo=pytz.UTC)
+			obj = Event(owner=request.user,title=_title,startDate=_start,endDate=_end,isPublic=_isPublic,isPermanent=_isPermanent)
+			obj.save()
+			_isPinned = newEvent.cleaned_data['_isPinned']
+			if _isPinned:
+				pin = Pin(owner=request.user,event=obj)
+				pin.save()
+			return HttpResponseRedirect('/')
+#return HttpResponseRedirect('/events/{0:s}/'.format(obj.id))
+	else:
+		newEvent = EventForm()
+	return render(request, 'tracker/newEvent.html', { \
+    'newEventForm': newEvent \
+  })
+
+def singleEvent(request, _id):
+	thisEvent = Event.objects.filter(id=_id)
+	thisEvent = thisEvent[0]
+	eventDiscussions = thisEvent.discussions.all()
+	vDates = [x['validDate'] for x in eventDiscussions.order_by('validDate').values('validDate').annotate(Count('validDate',distinct=True))]
+	discos = {}
+	for vDate in vDates:
+		discos[vDate] = eventDiscussions.filter(validDate=vDate).order_by('-createdDate')
+	return render(request, 'tracker/singleEvent.html', { \
+		'event': thisEvent, \
+    'validDates': vDates, \
+    'discussions': discos, \
   })
