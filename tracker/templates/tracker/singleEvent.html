@@ -22,6 +22,6 @@
 <script>
 	document.getElementById('nameOfView').innerHTML = 'Event &quot;{{ event.title }}&quot;';
 </script>
-<p>created {{ event.createdDate }} by {{ event.owner }}</p>
+<p>Created {{ event.createdDate|date:"Hi\z D M j" }} by {{ event.owner }}</p>
 {% include 'tracker/thread.html' %}
 {% endblock content %}

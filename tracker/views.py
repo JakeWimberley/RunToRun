@@ -36,7 +36,6 @@ def home(request):
 			_validDate = newDiscussion.cleaned_data['_validDate']
 			_validTime = newDiscussion.cleaned_data['_validTime']
 			_text = newDiscussion.cleaned_data['_text']
-			_event = newDiscussion.cleaned_data['_event']
 			_valid = datetime.datetime.combine(_validDate,_validTime)
 			_valid = _valid.replace(tzinfo=pytz.UTC)
 			listStart = _valid.strftime('%Y%m%d_0000')
@@ -44,6 +43,9 @@ def home(request):
 # TODO use _event
 			discoObj = Discussion(author=request.user,validDate=_valid,text=_text)
 			discoObj.save()
+			_eventIds = newDiscussion.cleaned_data['_event']
+			for e in _eventIds:
+				Event.objects.get(id=e).discussions.add(discoObj)
 			return HttpResponseRedirect('/discussions/{0:s}/{1:s}'.format(listStart,listEnd))
 	else:
 		newDiscussion = DiscussionForm(eventChoices=pinned)
@@ -98,7 +100,7 @@ def allDiscussions(request):
 	vTimes = [x['validDate'] for x in Discussion.objects.all().order_by('validDate').values('validDate').annotate(Count('validDate',distinct=True))]
 	discos = {}
 	for vTime in vTimes:
-		discos.append(Discussion.objects.filter(validDate=vTime).order_by('-createdDate'))
+		discos[vTime] = Discussion.objects.filter(validDate=vTime).order_by('-createdDate')
 	timeFrom = 'the beginning of time'
 	timeTo = 'the end of time'
 	return render(request, 'tracker/discussionRange.html', { \
@@ -119,9 +121,12 @@ def newEvent(request):
 			_endTime = newEvent.cleaned_data['_endTime']
 			_isPublic = newEvent.cleaned_data['_isPublic']
 			_isPermanent = newEvent.cleaned_data['_isPermanent']
-			_start = datetime.datetime.combine(_startDate,_startTime).replace(tzinfo=pytz.UTC)
-			_end = datetime.datetime.combine(_endDate,_endTime).replace(tzinfo=pytz.UTC)
-			obj = Event(owner=request.user,title=_title,startDate=_start,endDate=_end,isPublic=_isPublic,isPermanent=_isPermanent)
+			if _startDate and _startTime and _endDate and _endTime:
+				_start = datetime.datetime.combine(_startDate,_startTime).replace(tzinfo=pytz.UTC)
+				_end = datetime.datetime.combine(_endDate,_endTime).replace(tzinfo=pytz.UTC)
+				obj = Event(owner=request.user,title=_title,startDate=_start,endDate=_end,isPublic=_isPublic,isPermanent=_isPermanent)
+			else:
+				obj = Event(owner=request.user,title=_title,isPublic=_isPublic,isPermanent=_isPermanent)
 			obj.save()
 			_isPinned = newEvent.cleaned_data['_isPinned']
 			if _isPinned:
