@@ -40,7 +40,6 @@ def home(request):
 			_valid = _valid.replace(tzinfo=pytz.UTC)
 			listStart = _valid.strftime('%Y%m%d_0000')
 			listEnd = _valid.strftime('%Y%m%d_2359')
-# TODO use _event
 			discoObj = Discussion(author=request.user,validDate=_valid,text=_text)
 			discoObj.save()
 			_eventIds = newDiscussion.cleaned_data['_event']
@@ -141,8 +140,7 @@ def newEvent(request):
   })
 
 def singleEvent(request, _id):
-	thisEvent = Event.objects.filter(id=_id)
-	thisEvent = thisEvent[0]
+	thisEvent = Event.objects.get(id=_id)
 	eventDiscussions = thisEvent.discussions.all()
 	vDates = [x['validDate'] for x in eventDiscussions.order_by('validDate').values('validDate').annotate(Count('validDate',distinct=True))]
 	discos = {}

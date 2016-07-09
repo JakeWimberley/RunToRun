@@ -20,9 +20,9 @@
 {% block content %}
 <h2>Pinned events</h2>
 <ul>
-{% for event in pinned %}
-{% url 'singleEvent' event.id as eventUrl %}
-	<li><a href="{{ eventUrl }}">{{ event }}</a></li>
+{% for pinnedEvent in pinned %}
+{% url 'singleEvent' pinnedEvent.event.id as eventUrl %}
+	<li><a href="{{ eventUrl }}">{{ pinnedEvent }}</a></li>
 {% endfor %}
 </ul>
 <h2>Timeline</h2>
