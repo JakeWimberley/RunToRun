@@ -146,8 +146,25 @@ def singleEvent(request, _id):
 	discos = {}
 	for vDate in vDates:
 		discos[vDate] = eventDiscussions.filter(validDate=vDate).order_by('-createdDate')
+	pinStatus = Pin.objects.filter(event=thisEvent.pk).exists()
 	return render(request, 'tracker/singleEvent.html', { \
 		'event': thisEvent, \
+		'eventIsPinned': pinStatus, \
     'validDates': vDates, \
     'discussions': discos, \
   })
+
+def asyncTogglePin(request):
+	# TODO user auth (respond with 'not logged in' or something)
+	if request.method == 'GET':
+			eventId = request.GET['event']
+			thisEvent = Event.objects.get(id=eventId)
+			pinQs = Pin.objects.filter(event=thisEvent.pk)
+			if pinQs.exists():
+				# remove pin
+				pinQs.delete()
+				return HttpResponse('unpinned')
+			else:
+				pin = Pin(owner=request.user,event=thisEvent)
+				pin.save()
+				return HttpResponse('pinned')

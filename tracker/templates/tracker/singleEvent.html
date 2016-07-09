@@ -21,7 +21,36 @@
 {% block content %}
 <script>
 	document.getElementById('nameOfView').innerHTML = 'Event &quot;{{ event.title }}&quot;';
+	$(function() {
+{% if eventIsPinned %}
+		$("#pinButton").button({
+			icons: { primary: "ui-icon-pin-w" },
+			label: 'Unpin this event'
+		});//.html('Unpin this event');
+{% else %}
+		$("#pinButton").button({
+			icons: { primary: "ui-icon-pin-s" },
+			label: 'Pin this event'
+		});//.html('Pin this event');
+{% endif %}
+		$("#pinButton").click(function() {
+			$.get('/async/togglePin', { event: {{ event.id }} }, function(data) {
+				if (data == 'pinned') {
+					$("#pinButton").button({
+						icons: { primary: "ui-icon-pin-w" },
+						label: 'Unpin this event'
+					});//.html('Unpin this event');
+				} else if (data == 'unpinned') {
+					$("#pinButton").button({
+						icons: { primary: "ui-icon-pin-s" },
+						label: 'Pin this event'
+					});//.html('Pin this event');
+				}
+			});
+		});
+	});
 </script>
 <p>Created {{ event.createdDate|date:"Hi\z D M j" }} by {{ event.owner }}</p>
+<button id="pinButton">(pin button)</button>
 {% include 'tracker/thread.html' %}
 {% endblock content %}

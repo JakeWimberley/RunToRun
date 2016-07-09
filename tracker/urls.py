@@ -26,4 +26,5 @@ urlpatterns = [
   url(r'^addConcurrent/(\d+)/$', views.concurrentDiscussion, name='addConcurrent'),
   url(r'^newEvent/$', views.newEvent, name='newEvent'),
   url(r'^event/(\d+)/$', views.singleEvent, name='singleEvent'),
+  url(r'^async/togglePin', views.asyncTogglePin, name='togglePin'),
 ]
