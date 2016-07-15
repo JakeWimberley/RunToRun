@@ -23,4 +23,15 @@
 	document.getElementById('nameOfView').innerHTML = 'View Thread';
 </script>
 {% include 'tracker/thread.html' %}
+{% for event in relEvents %}
+{% if forloop.first %}
+<p>This thread is associated with the following events:</p>
+<ul>
+{% endif %}
+{% url 'singleEvent' event.id as eventUrl %}
+	<li><a href="{{ eventUrl }}">{{ event }}</a></li>
+{% if forloop.last %}
+</ul>
+{% endif %}
+{% endfor %}
 {% endblock content %}

@@ -7,8 +7,9 @@ jqTimeInput = forms.TimeInput() # TODO maybe not necessary
 class ThreadForm(forms.Form):
     def __init__(self,*args,**kwargs):
       eventChoices = kwargs.pop('eventChoices')
+      selectedChoice = kwargs.pop('selectedChoice')
       super(ThreadForm,self).__init__(*args,**kwargs)
-      self.fields['_event'] = forms.MultipleChoiceField(label='select one or more events',choices=[(x.id, str(x)) for x in eventChoices],required=False)
+      self.fields['_event'] = forms.MultipleChoiceField(label='select one or more events',choices=[(x.id, str(x)) for x in eventChoices],required=False,initial=selectedChoice)
     _title = forms.CharField(label='title')
     _validDate = forms.DateField(label='valid date (UTC)',widget=jqDateInput)
     _validTime = forms.TimeField(label='valid time (UTC)',widget=jqTimeInput,input_formats=['%H:%M','%H%M'])

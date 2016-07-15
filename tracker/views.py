@@ -33,15 +33,18 @@ def home(request):
 	return render(request, 'tracker/home.html', { \
     'timelineEvents': timelineEvents, \
     'pinned': pinned, \
-    'newThread': ThreadForm(eventChoices=pinned), \
+    'newThread': ThreadForm(eventChoices=pinned,selectedChoice=None), \
     'newEvent': EventForm(), \
   })
 
-def newThread(request):
-# TODO on this view, eventChoices should be set to all public events that the valid time falls in
-	pinned = Pin.objects.filter(owner=request.user)
+def newThread(request, setEvent=None):
+	# setEvent is ID of the event to which this thread should be added
+	# if set, also redirect to event page, not thread page
 	if request.method == 'POST':
-		newThread = ThreadForm(request.POST,eventChoices=pinned)
+		if setEvent is None:
+			newThread = ThreadForm(request.POST,eventChoices=Pin.objects.filter(owner=request.user),selectedChoice=None)
+		else:
+			newThread = ThreadForm(request.POST,eventChoices=Event.objects.filter(id=setEvent),selectedChoice=setEvent)
 		if newThread.is_valid():
 			_validDate = newThread.cleaned_data['_validDate']
 			_validTime = newThread.cleaned_data['_validTime']
@@ -59,10 +62,20 @@ def newThread(request):
 			_eventIds = newThread.cleaned_data['_event']
 			for e in _eventIds:
 				Event.objects.get(id=e).threads.add(threadObj)
-			return HttpResponseRedirect('/thread/{0:d}/'.format(threadObj.pk))
+			if setEvent is None:
+				return HttpResponseRedirect('/thread/{0:d}'.format(threadObj.pk))
+			else:
+				return HttpResponseRedirect('/event/'+setEvent)
 	else:
-		newThread = ThreadForm(eventChoices=pinned)
+		# TODO eventChoices should be set to all public events that the valid time falls in
+		if setEvent is None:
+			newThread = ThreadForm(eventChoices=Pin.objects.filter(owner=request.user),selectedChoice=None)
+			formAction = '/newThread/'
+		else:
+			newThread = ThreadForm(eventChoices=Event.objects.filter(id=setEvent),selectedChoice=setEvent)
+			formAction = '/newThreadInEvent/' + setEvent
 	return render(request, 'tracker/newThread.html', { \
+		'action': formAction, \
     'newThreadForm': newThread \
   })
 
@@ -97,7 +110,7 @@ def extendThread(request, _id):
 			discoObj.save()
 			parent.discussions.add(discoObj)
 			parent.save()
-			return HttpResponseRedirect('/thread/{0:d}/'.format(parent.pk))
+			return HttpResponseRedirect('/thread/{0:d}'.format(parent.pk))
 	else:
 		textBox = DiscussionFormTextOnly()
 	return render(request, 'tracker/extendThread.html', {
@@ -143,7 +156,7 @@ def newEvent(request):
 			if _isPinned:
 				pin = Pin(owner=request.user,event=obj)
 				pin.save()
-			return HttpResponseRedirect('/event/{0:d}/'.format(obj.id))
+			return HttpResponseRedirect('/event/{0:d}'.format(obj.id))
 	else:
 		newEvent = EventForm()
 	return render(request, 'tracker/newEvent.html', { \
@@ -174,6 +187,7 @@ def singleEvent(request, _id):
 
 def singleThread(request, _id):
 	thisThread = Thread.objects.get(pk=_id)
+	relEvents = thisThread.event_set.all()
 	threadKeys = {}
 	discussions = {}
 	threadTitles = {}
@@ -183,6 +197,7 @@ def singleThread(request, _id):
 	threadTitles[_id] = thisThread.title
 	validDates[_id] = thisThread.validDate
 	return render(request, 'tracker/singleThread.html', { \
+		'relEvents': relEvents, \
 		'threadKeys': threadKeys, \
 		'discussionSets': discussions, \
 		'threadTitles': threadTitles, \

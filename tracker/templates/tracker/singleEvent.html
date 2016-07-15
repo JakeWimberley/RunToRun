@@ -48,9 +48,15 @@
 				}
 			});
 		});
+		$("#newThreadButton").button({
+			icons: { primary: "ui-icon-pencil" },
+			label: 'New thread in this event'
+		})
 	});
 </script>
 <p>Created {{ event.createdDate|date:"Hi\z D M j" }} by {{ event.owner }}</p>
+{% url 'newThreadInEvent' event.id as newThreadUrl %}
 <button id="pinButton">(pin button)</button>
+<button id="newThreadButton" onclick="window.location.href='{{ newThreadUrl }}'">(new thread button)</button>
 {% include 'tracker/thread.html' %}
 {% endblock content %}
