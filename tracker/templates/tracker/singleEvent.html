@@ -26,12 +26,12 @@
 		$("#pinButton").button({
 			icons: { primary: "ui-icon-pin-w" },
 			label: 'Unpin this event'
-		});//.html('Unpin this event');
+		});
 {% else %}
 		$("#pinButton").button({
 			icons: { primary: "ui-icon-pin-s" },
 			label: 'Pin this event'
-		});//.html('Pin this event');
+		});
 {% endif %}
 		$("#pinButton").click(function() {
 			$.get('/async/togglePin', { event: {{ event.id }} }, function(data) {

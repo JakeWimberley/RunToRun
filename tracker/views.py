@@ -30,6 +30,16 @@ import re
 def home(request):
 	timelineEvents = Event.objects.filter(Q(owner=request.user)|Q(isPublic=True))
 	pinned = Pin.objects.filter(owner=request.user)
+	return render(request, 'tracker/home.html', { \
+    'timelineEvents': timelineEvents, \
+    'pinned': pinned, \
+    'newThread': ThreadForm(eventChoices=pinned), \
+    'newEvent': EventForm(), \
+  })
+
+def newThread(request):
+# TODO on this view, eventChoices should be set to all public events that the valid time falls in
+	pinned = Pin.objects.filter(owner=request.user)
 	if request.method == 'POST':
 		newThread = ThreadForm(request.POST,eventChoices=pinned)
 		if newThread.is_valid():
@@ -52,10 +62,8 @@ def home(request):
 			return HttpResponseRedirect('/thread/{0:d}/'.format(threadObj.pk))
 	else:
 		newThread = ThreadForm(eventChoices=pinned)
-	return render(request, 'tracker/home.html', { \
-    'timelineEvents': timelineEvents, \
-    'pinned': pinned, \
-    'newThread': newThread
+	return render(request, 'tracker/newThread.html', { \
+    'newThreadForm': newThread \
   })
 
 def discussionRange(request, _timeFrom, _timeTo):
@@ -135,7 +143,7 @@ def newEvent(request):
 			if _isPinned:
 				pin = Pin(owner=request.user,event=obj)
 				pin.save()
-			return HttpResponseRedirect('/events/{0:d}/'.format(obj.id))
+			return HttpResponseRedirect('/event/{0:d}/'.format(obj.id))
 	else:
 		newEvent = EventForm()
 	return render(request, 'tracker/newEvent.html', { \

@@ -1,4 +1,4 @@
-"""
+<!--
     Copyright 2016 Jake Wimberley.
 
     This file is part of RunToRun.
@@ -15,18 +15,17 @@
 
     You should have received a copy of the GNU General Public License
     along with RunToRun.  If not, see <http://www.gnu.org/licenses/>.
-"""
-from django.conf.urls import url
-from . import views
-
-urlpatterns = [
-	url(r'^$', views.home, name='home'),
-#url(r'^discussions/(\d{8}_\d{4})/(\d{8}_\d{4})/$', views.discussionRange),
-#url(r'^discussions/$', views.allDiscussions),
-  url(r'^extendThread/(\d+)/$', views.extendThread, name='extendThread'),
-  url(r'^newEvent/$', views.newEvent, name='newEvent'),
-  url(r'^newThread/$', views.newThread, name='newThread'),
-  url(r'^event/(\d+)/$', views.singleEvent, name='singleEvent'),
-  url(r'^thread/(\d+)/$', views.singleThread, name='singleThread'),
-  url(r'^async/togglePin', views.asyncTogglePin, name='togglePin'),
-]
+-->
+{% extends 'tracker/base.html' %}
+{% block content %}
+<script>
+	document.getElementById('nameOfView').innerHTML = 'Create a new thread';
+</script>
+<form action="/newThread/" method="post">
+  {% csrf_token %}
+  <table>
+  {{ newThreadForm }}
+  </table>
+  <input type="submit" value="Create thread" />
+</form>
+{% endblock content %}
