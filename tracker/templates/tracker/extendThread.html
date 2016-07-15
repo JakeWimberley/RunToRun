@@ -21,8 +21,8 @@
 <head>
 </head>
 <body>
-<h2>Adding a new discussion valid at {{ validTime }}</h2>
-<form action="{% url 'addConcurrent' id %}" method="post">
+<h2>Adding a new discussion to &quot;{{ threadTitle }}&quot; valid at {{ validTime|date:"Hi\z D M j" }}</h2>
+<form action="{% url 'extendThread' id %}" method="post">
   {% csrf_token %}
   <table>
   {{ discussionTextBox }}

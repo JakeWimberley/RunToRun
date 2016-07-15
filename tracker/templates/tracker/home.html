@@ -31,11 +31,11 @@
 	<li>{{ event }}</li>
 {% endfor %}
 </ul>
-<h2>Add a quick discussion</h2>
+<h2>Start a new thread</h2>
 <form action="/" method="post">
   {% csrf_token %}
   <table>
-  {{ newDiscussion }}
+  {{ newThread }}
   </table>
   <input type="submit" value="Submit" />
 </form>

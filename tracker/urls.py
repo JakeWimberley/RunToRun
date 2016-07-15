@@ -21,10 +21,11 @@ from . import views
 
 urlpatterns = [
 	url(r'^$', views.home, name='home'),
-  url(r'^discussions/(\d{8}_\d{4})/(\d{8}_\d{4})/$', views.discussionRange),
-  url(r'^discussions/$', views.allDiscussions),
-  url(r'^addConcurrent/(\d+)/$', views.concurrentDiscussion, name='addConcurrent'),
+#url(r'^discussions/(\d{8}_\d{4})/(\d{8}_\d{4})/$', views.discussionRange),
+#url(r'^discussions/$', views.allDiscussions),
+  url(r'^extendThread/(\d+)/$', views.extendThread, name='extendThread'),
   url(r'^newEvent/$', views.newEvent, name='newEvent'),
   url(r'^event/(\d+)/$', views.singleEvent, name='singleEvent'),
+  url(r'^thread/(\d+)/$', views.singleThread, name='singleThread'),
   url(r'^async/togglePin', views.asyncTogglePin, name='togglePin'),
 ]

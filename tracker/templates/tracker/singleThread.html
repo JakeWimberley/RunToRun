@@ -1,4 +1,5 @@
-"""
+<!DOCTYPE html>
+<!--
     Copyright 2016 Jake Wimberley.
 
     This file is part of RunToRun.
@@ -15,15 +16,11 @@
 
     You should have received a copy of the GNU General Public License
     along with RunToRun.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-from django.contrib import admin
-from .models import Event, Discussion, Chart, Pin, Thread
-
-# Register your models here.
-
-admin.site.register(Event)
-admin.site.register(Thread)
-admin.site.register(Discussion)
-admin.site.register(Chart)
-admin.site.register(Pin)
+-->
+{% extends 'tracker/base.html' %}
+{% block content %}
+<script>
+	document.getElementById('nameOfView').innerHTML = 'View Thread';
+</script>
+{% include 'tracker/thread.html' %}
+{% endblock content %}

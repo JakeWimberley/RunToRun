@@ -19,8 +19,8 @@
 from django.shortcuts import render
 from django.db.models import Q, Count
 from django.http import HttpResponseRedirect, HttpResponse
-from .models import Discussion, Event, Pin
-from .forms import DiscussionForm, DiscussionFormTextOnly, EventForm
+from .models import Discussion, Event, Pin, Thread
+from .forms import ThreadForm, DiscussionFormTextOnly, EventForm
 import datetime
 import pytz
 import re
@@ -31,27 +31,31 @@ def home(request):
 	timelineEvents = Event.objects.filter(Q(owner=request.user)|Q(isPublic=True))
 	pinned = Pin.objects.filter(owner=request.user)
 	if request.method == 'POST':
-		newDiscussion = DiscussionForm(request.POST,eventChoices=pinned)
-		if newDiscussion.is_valid():
-			_validDate = newDiscussion.cleaned_data['_validDate']
-			_validTime = newDiscussion.cleaned_data['_validTime']
-			_text = newDiscussion.cleaned_data['_text']
+		newThread = ThreadForm(request.POST,eventChoices=pinned)
+		if newThread.is_valid():
+			_validDate = newThread.cleaned_data['_validDate']
+			_validTime = newThread.cleaned_data['_validTime']
+			_title = newThread.cleaned_data['_title']
+			_text = newThread.cleaned_data['_text']
 			_valid = datetime.datetime.combine(_validDate,_validTime)
 			_valid = _valid.replace(tzinfo=pytz.UTC)
-			listStart = _valid.strftime('%Y%m%d_0000')
-			listEnd = _valid.strftime('%Y%m%d_2359')
-			discoObj = Discussion(author=request.user,validDate=_valid,text=_text)
+			# make discussion object, then add it to a new thread object
+			discoObj = Discussion(author=request.user,text=_text)
 			discoObj.save()
-			_eventIds = newDiscussion.cleaned_data['_event']
+			threadObj = Thread(title=_title,validDate=_valid)
+			threadObj.save()
+			threadObj.discussions.add(discoObj)
+			threadObj.save()
+			_eventIds = newThread.cleaned_data['_event']
 			for e in _eventIds:
-				Event.objects.get(id=e).discussions.add(discoObj)
-			return HttpResponseRedirect('/discussions/{0:s}/{1:s}'.format(listStart,listEnd))
+				Event.objects.get(id=e).threads.add(threadObj)
+			return HttpResponseRedirect('/thread/{0:d}/'.format(threadObj.pk))
 	else:
-		newDiscussion = DiscussionForm(eventChoices=pinned)
+		newThread = ThreadForm(eventChoices=pinned)
 	return render(request, 'tracker/home.html', { \
     'timelineEvents': timelineEvents, \
     'pinned': pinned, \
-    'newDiscussion': newDiscussion
+    'newThread': newThread
   })
 
 def discussionRange(request, _timeFrom, _timeTo):
@@ -73,24 +77,24 @@ def discussionRange(request, _timeFrom, _timeTo):
     'timeTo': timeTo
   })
 
-def concurrentDiscussion(request, _id):
+def extendThread(request, _id):
 	"A standalone discussion form with the validDate and event defined by an existing discussion."
-	parent = Discussion.objects.get(id=_id)
+	parent = Thread.objects.get(pk=_id)
 	_valid = parent.validDate
 	if request.method == 'POST':
 		newDiscussion = DiscussionFormTextOnly(request.POST)
 		if newDiscussion.is_valid():
 			_text = newDiscussion.cleaned_data['_text']
-			listStart = _valid.strftime('%Y%m%d_0000')
-			listEnd = _valid.strftime('%Y%m%d_2359')
-# TODO use _event
-			discoObj = Discussion(author=request.user,validDate=_valid,text=_text)
+			discoObj = Discussion(author=request.user,text=_text)
 			discoObj.save()
-			return HttpResponseRedirect('/discussions/{0:s}/{1:s}'.format(listStart,listEnd))
+			parent.discussions.add(discoObj)
+			parent.save()
+			return HttpResponseRedirect('/thread/{0:d}/'.format(parent.pk))
 	else:
 		textBox = DiscussionFormTextOnly()
-	return render(request, 'tracker/concurrentDiscussion.html', {
+	return render(request, 'tracker/extendThread.html', {
 		'id': _id,
+		'threadTitle': parent.title,
 		'validTime': _valid,
 		'discussionTextBox': textBox,
 	})
@@ -131,8 +135,7 @@ def newEvent(request):
 			if _isPinned:
 				pin = Pin(owner=request.user,event=obj)
 				pin.save()
-			return HttpResponseRedirect('/')
-#return HttpResponseRedirect('/events/{0:s}/'.format(obj.id))
+			return HttpResponseRedirect('/events/{0:d}/'.format(obj.id))
 	else:
 		newEvent = EventForm()
 	return render(request, 'tracker/newEvent.html', { \
@@ -141,17 +144,41 @@ def newEvent(request):
 
 def singleEvent(request, _id):
 	thisEvent = Event.objects.get(id=_id)
-	eventDiscussions = thisEvent.discussions.all()
-	vDates = [x['validDate'] for x in eventDiscussions.order_by('validDate').values('validDate').annotate(Count('validDate',distinct=True))]
+	eventThreads = thisEvent.threads.all()
+	threadKeys = [x['id'] for x in eventThreads.values('id').order_by('validDate')]
+	discussions = {}
+	threadTitles = {}
+	validDates = {}
 	discos = {}
-	for vDate in vDates:
-		discos[vDate] = eventDiscussions.filter(validDate=vDate).order_by('-createdDate')
+	for key in threadKeys:
+		discussions[key] = eventThreads.get(id=key).discussions.all().order_by('-createdDate')
+		threadTitles[key] = eventThreads.get(id=key).title
+		validDates[key] = eventThreads.get(id=key).validDate
 	pinStatus = Pin.objects.filter(event=thisEvent.pk).exists()
 	return render(request, 'tracker/singleEvent.html', { \
 		'event': thisEvent, \
 		'eventIsPinned': pinStatus, \
-    'validDates': vDates, \
-    'discussions': discos, \
+		'threadKeys': threadKeys, \
+		'discussionSets': discussions, \
+		'threadTitles': threadTitles, \
+		'validDates': validDates, \
+  })
+
+def singleThread(request, _id):
+	thisThread = Thread.objects.get(pk=_id)
+	threadKeys = {}
+	discussions = {}
+	threadTitles = {}
+	validDates = {}
+	threadKeys[_id] = thisThread.pk
+	discussions[_id] = thisThread.discussions.all().order_by('-createdDate')
+	threadTitles[_id] = thisThread.title
+	validDates[_id] = thisThread.validDate
+	return render(request, 'tracker/singleThread.html', { \
+		'threadKeys': threadKeys, \
+		'discussionSets': discussions, \
+		'threadTitles': threadTitles, \
+		'validDates': validDates, \
   })
 
 def asyncTogglePin(request):

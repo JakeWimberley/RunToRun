@@ -1,21 +1,22 @@
 {% load dictGet %}
 <script>
 	$(function() {
-		$( ".concurrentDiscussions" ).accordion();
+		$( ".oneThread" ).accordion();
 	});
 </script>
-{% for validDate in validDates %}
-<h2>Valid {{ validDate|date:"Hi\z D M j" }}</h2>
-<div class="concurrentDiscussions">
-{% for disco in discussions|dictGet:validDate %}
+{% for key in threadKeys %}
+<h2>{{ threadTitles|dictGet:key }}</h2>
+<p>Valid {{ validDates|dictGet:key|date:"Hi\z D M j" }}</p>
+<div class="oneThread">
+{% for disco in discussionSets|dictGet:key %}
 	<h3>{{ disco.createdDate|date:"Hi\z D M j" }} ({{ disco.author }})</h3>
 	<div>
 		<p>{{ disco.text }}</p>
 	</div>
 {% if forloop.last %}
-{% url 'addConcurrent' disco.id as concurrentUrl %}
-	<h3>Add another discussion valid at this time</h3>
-	<div><a href="{{ concurrentUrl }}">Click here</a></div>
+{% url 'extendThread' key as extendThread %}
+	<h3>Extend this thread with another discussion</h3>
+	<div><a href="{{ extendThread }}">Click here</a></div>
 {% endif %}
 {% endfor %}
 </div>
