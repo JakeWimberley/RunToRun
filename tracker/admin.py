@@ -18,7 +18,7 @@
 """
 
 from django.contrib import admin
-from .models import Event, Discussion, Chart, Pin, Thread
+from .models import *
 
 # Register your models here.
 
@@ -27,3 +27,4 @@ admin.site.register(Thread)
 admin.site.register(Discussion)
 admin.site.register(Chart)
 admin.site.register(Pin)
+admin.site.register(Tag)

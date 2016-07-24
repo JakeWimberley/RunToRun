@@ -19,7 +19,7 @@
 from django.shortcuts import render
 from django.db.models import Q, Count
 from django.http import HttpResponseRedirect, HttpResponse
-from .models import Discussion, Event, Pin, Thread
+from .models import Discussion, Event, Pin, Thread, Tag
 from .forms import ThreadForm, DiscussionFormTextOnly, EventForm
 import datetime
 import pytz
@@ -179,6 +179,9 @@ def singleEvent(request, _id):
 	return render(request, 'tracker/singleEvent.html', { \
 		'event': thisEvent, \
 		'eventIsPinned': pinStatus, \
+# TODO security to prevent malicious JS from being put into tagList
+		'eventTagList': ','.join([str(x) for x in thisEvent.tag_set.all()]), \
+		'fullTagList': ','.join([str(x) for x in Tag.objects.all()]), \
 		'threadKeys': threadKeys, \
 		'discussionSets': discussions, \
 		'threadTitles': threadTitles, \
@@ -218,3 +221,38 @@ def asyncTogglePin(request):
 				pin = Pin(owner=request.user,event=thisEvent)
 				pin.save()
 				return HttpResponse('pinned')
+
+def asyncToggleTag(request):
+	# TODO user auth (respond with 'not logged in' or something)
+	if request.method == 'GET':
+		eventId = request.GET['event']
+		tagName = request.GET['tagName']
+		# remove any funky chars and/or surrounding whitespace from tagName
+		tagName = tagName.replace(',','-').replace('\\','/').replace("'",'`').strip()
+		try:
+			eventObj = Event.objects.get(pk=eventId)
+		except Event.DoesNotExist:
+			return HttpResponse('aint,no,such,event')
+		try:
+			tagObj = Tag.objects.get(name=tagName)
+		except Tag.DoesNotExist:
+			# create new tag for this event
+			newTag = Tag(name=tagName)
+			newTag.save()
+			newTag.events.add(eventObj)
+		else:
+			if eventObj in tagObj.events.all():
+				# untag event (remove its id from tag object)
+				tagObj.events.remove(eventObj)
+			else:
+				# tag event
+				tagObj.events.add(eventObj)
+		# return comma-delimited list of tags
+		return HttpResponse(','.join([str(x) for x in eventObj.tag_set.all()]))
+
+# TODO probably can delete this...
+def tagButtonList(eventObj):
+	returnStr = ''
+	for tagObj in eventObj.tag_set.all():
+		returnStr = returnStr + '<button class="tag" onclick="toggleTag(\'' + tagObj.name + '\')">' + tagObj.name + '</button> '
+	return returnStr

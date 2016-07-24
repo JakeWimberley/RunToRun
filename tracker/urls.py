@@ -30,4 +30,5 @@ urlpatterns = [
   url(r'^event/(\d+)', views.singleEvent, name='singleEvent'),
   url(r'^thread/(\d+)', views.singleThread, name='singleThread'),
   url(r'^async/togglePin', views.asyncTogglePin, name='togglePin'),
+  url(r'^async/toggleTag', views.asyncToggleTag, name='toggleTag'),
 ]

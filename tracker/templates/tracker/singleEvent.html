@@ -21,34 +21,75 @@
 {% block content %}
 <script>
 	document.getElementById('nameOfView').innerHTML = 'Event &quot;{{ event.title }}&quot;';
+
+	// callback to add or remove a tag
+	function toggleTag(name) {
+		$.get('/async/toggleTag', { event: {{ event.id }}, tagName: name }, function(data) {
+			// data returned is a comma-delim list for makeTagButtons()
+			makeTagButtons(data);
+			$('#newTagEntry').val('');
+		});
+	}
+	// this function takes a comma-delim list of tags and makes the toggle buttons for those tags
+	function makeTagButtons(tagListStr) {
+		var element = 'span#tags';
+		if (tagListStr.length < 1) {
+			// return no tags
+			$(element).html('No tags');
+			return;
+		}
+		var tagListArray = tagListStr.split(',');
+		var newHtml = 'Tags: ';
+		for (var i = 0; i < tagListArray.length; i++) {
+			newHtml += '<button onclick="toggleTag(\'' + tagListArray[i] + '\')">' + tagListArray[i] + '</button> ';
+		}
+		$(element).html(newHtml);
+	}
+
 	$(function() {
+		// call fcn to create initial set of tag buttons
+		makeTagButtons('{{ eventTagList }}');
+		// create possible tag array for autocomplete
+		var fullTagListStr = '{{ fullTagList }}';
+		var fullTagListArray = fullTagListStr.split(',');
+		$('#newTagEntry').autocomplete({
+			source: fullTagListArray,
+			delay: 0,
+			minLength: 2,
+			select: function(evt,ui) { toggleTag(ui.item.value); },
+		});
+		$('#newTagEntry').keyup(function (evt) {
+			// 13 is Enter key
+			if (evt.which === 13) toggleTag($('#newTagEntry').val());
+		});
+
 {% if eventIsPinned %}
-		$("#pinButton").button({
+		$("button#pin").button({
 			icons: { primary: "ui-icon-pin-w" },
 			label: 'Unpin this event'
 		});
 {% else %}
-		$("#pinButton").button({
+		$("button#pin").button({
 			icons: { primary: "ui-icon-pin-s" },
 			label: 'Pin this event'
 		});
 {% endif %}
-		$("#pinButton").click(function() {
+		$("button#pin").click(function() {
 			$.get('/async/togglePin', { event: {{ event.id }} }, function(data) {
 				if (data == 'pinned') {
-					$("#pinButton").button({
+					$("button#pin").button({
 						icons: { primary: "ui-icon-pin-w" },
 						label: 'Unpin this event'
 					});
 				} else if (data == 'unpinned') {
-					$("#pinButton").button({
+					$("button#pin").button({
 						icons: { primary: "ui-icon-pin-s" },
 						label: 'Pin this event'
 					});
 				}
 			});
 		});
-		$("#newThreadButton").button({
+		$("button#newThread").button({
 			icons: { primary: "ui-icon-pencil" },
 			label: 'New thread in this event'
 		})
@@ -56,7 +97,8 @@
 </script>
 <p>Created {{ event.createdDate|date:"Hi\z D M j" }} by {{ event.owner }}</p>
 {% url 'newThreadInEvent' event.id as newThreadUrl %}
-<button id="pinButton">(pin button)</button>
-<button id="newThreadButton" onclick="window.location.href='{{ newThreadUrl }}'">(new thread button)</button>
+<button id="pin">(pin button)</button>
+<button id="newThread" onclick="window.location.href='{{ newThreadUrl }}'">(new thread button)</button>
+<span id="tagWidgetGroup"><input id="newTagEntry" type="text" placeholder="type new tag..."> <span id="tags"></span></span>
 {% include 'tracker/thread.html' %}
 {% endblock content %}

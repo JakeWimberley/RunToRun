@@ -60,6 +60,7 @@ class Thread(models.Model):
 		return self.title + ' (' + self.validDate.strftime(dateFormatStr) + ')'
 
 class Event(models.Model):
+# TODO summary and conclusion (isConcluded)
 	title = models.CharField(max_length=120)
 	createdDate = models.DateTimeField(default=timezone.now)
 	startDate = models.DateTimeField(null=True,blank=True,verbose_name='start date (if blank, event time range is defined by that of threads')
@@ -81,3 +82,10 @@ class Event(models.Model):
 			return '{0:s} ({1:s})'.format(self.title, allThreadDates[0].strftime(dateFormatStr))
 		else:
 			return '{0:s} (undefined time range)'.format(self.title)
+
+class Tag(models.Model):
+	name = models.CharField(max_length=64,primary_key=True)
+	events = models.ManyToManyField(Event,blank=True)
+
+	def __str__(self):
+		return self.name
