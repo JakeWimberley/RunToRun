@@ -188,6 +188,14 @@ def singleEvent(request, _id):
 		'validDates': validDates, \
   })
 
+def singleTag(request, tagName):
+	thisTag = Tag.objects.get(name=tagName)
+	relEvents = thisTag.events.all()
+	return render(request, 'tracker/multipleEvent.html', { \
+		'events': relEvents, \
+	})
+
+
 def singleThread(request, _id):
 	thisThread = Thread.objects.get(pk=_id)
 	relEvents = thisThread.event_set.all()
@@ -249,10 +257,3 @@ def asyncToggleTag(request):
 				tagObj.events.add(eventObj)
 		# return comma-delimited list of tags
 		return HttpResponse(','.join([str(x) for x in eventObj.tag_set.all()]))
-
-# TODO probably can delete this...
-def tagButtonList(eventObj):
-	returnStr = ''
-	for tagObj in eventObj.tag_set.all():
-		returnStr = returnStr + '<button class="tag" onclick="toggleTag(\'' + tagObj.name + '\')">' + tagObj.name + '</button> '
-	return returnStr

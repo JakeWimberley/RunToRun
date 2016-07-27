@@ -16,10 +16,14 @@ span.leftHalf {
 	width: 50%;
 	display: inline-block;
 	text-align: left;
+  text-decoration: none;
 }
 span.rightHalf {
 	left: 50%;
 	width: 50%;
 	display: inline-block;
 	text-align: right;
+}
+a.noUnderline {
+  text-decoration: none;
 }

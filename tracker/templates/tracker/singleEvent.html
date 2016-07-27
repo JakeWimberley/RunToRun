@@ -89,7 +89,7 @@
 				}
 			});
 		});
-		$("button#newThread").button({
+		$("button.newThread").button({
 			icons: { primary: "ui-icon-pencil" },
 			label: 'New thread in this event'
 		})
@@ -98,7 +98,7 @@
 <p>Created {{ event.createdDate|date:"Hi\z D M j" }} by {{ event.owner }}</p>
 {% url 'newThreadInEvent' event.id as newThreadUrl %}
 <button id="pin">(pin button)</button>
-<button id="newThread" onclick="window.location.href='{{ newThreadUrl }}'">(new thread button)</button>
+<button class="newThread" onclick="window.location.href='{{ newThreadUrl }}'">(new thread button)</button>
 <span id="tagWidgetGroup"><input id="newTagEntry" type="text" placeholder="type new tag..."> <span id="tags"></span></span>
 {% include 'tracker/thread.html' %}
 {% endblock content %}

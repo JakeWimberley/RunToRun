@@ -33,8 +33,8 @@ class Pin(models.Model):
 	owner = models.ForeignKey('auth.User')
 	event = models.ForeignKey('Event')
 
-	def __str__(self):
-		return str(self.event)
+	def __unicode__(self):
+		return unicode(self.event)
 
 class Chart(models.Model):
 	validDate = models.DateTimeField(default=timezone.now)
@@ -70,22 +70,25 @@ class Event(models.Model):
 	isPublic = models.BooleanField(default=False,verbose_name='share this event with other users')
 	isPermanent = models.BooleanField(default=False,verbose_name="keep this event forever")
 
-	def __str__(self):
+	def describeTimeRange(self):
 		# start/end dates are preferred if user defined them
 		if self.startDate and self.endDate:
-			return '{0:s} (fixed, {1:s} to {2:s})'.format(self.title, self.startDate.strftime(dateFormatStr), self.endDate.strftime(dateFormatStr))
+			return unicode('{0:s} to {1:s} [fixed by owner]'.format(self.startDate.strftime(dateFormatStr), self.endDate.strftime(dateFormatStr)))
 		allThreadDates = [x.validDate for x in self.threads.all()]
 		allThreadDates.sort()
 		if len(allThreadDates) >= 2:
-			return '{0:s} ({1:s} to {2:s})'.format(self.title, allThreadDates[0].strftime(dateFormatStr), allThreadDates[-1].strftime(dateFormatStr))
+			return unicode('{0:s} to {1:s}'.format(allThreadDates[0].strftime(dateFormatStr), allThreadDates[-1].strftime(dateFormatStr)))
 		elif len(allThreadDates) == 1:
-			return '{0:s} ({1:s})'.format(self.title, allThreadDates[0].strftime(dateFormatStr))
+			return unicode('{0:s} [single thread]'.format(allThreadDates[0].strftime(dateFormatStr)))
 		else:
-			return '{0:s} (undefined time range)'.format(self.title)
+			return unicode('undefined time range')
+
+	def __unicode__(self):
+		return self.title + u' (' + self.describeTimeRange() + u')'
 
 class Tag(models.Model):
 	name = models.CharField(max_length=64,primary_key=True)
 	events = models.ManyToManyField(Event,blank=True)
 
-	def __str__(self):
+	def __unicode__(self):
 		return self.name

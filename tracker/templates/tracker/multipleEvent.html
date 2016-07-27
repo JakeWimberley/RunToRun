@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--
+    Copyright 2016 Jake Wimberley.
+
+    This file is part of RunToRun.
+
+    RunToRun is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    RunToRun is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with RunToRun.  If not, see <http://www.gnu.org/licenses/>.
+-->
+{% extends 'tracker/base.html' %}
+{% block content %}
+<script>
+	document.getElementById('nameOfView').innerHTML = 'Event selection';
+	$(function() {
+		$("button.eventDetails").button({
+			icons: { primary: "ui-icon-extlink" },
+			label: 'Details'
+		});
+		$("button.newThread").button({
+			icons: { primary: "ui-icon-pencil" },
+			label: 'New thread'
+		});
+	});
+</script>
+{% for event in events %}
+<h2>{{ event.title }}</h2>
+<p><span class="ui-icon ui-icon-person" style="display: inline-block"></span> {{ event.owner }}</p>
+<p><span class="ui-icon ui-icon-clock" style="display: inline-block"></span> {{ event.describeTimeRange }}</p>
+<p><span class="ui-icon ui-icon-tag" style="display: inline-block"></span>
+{% for tag in event.tag_set.all %}
+{% url 'singleTag' tag.name as tagUrl %}
+<button onclick="window.location.href='{{ tagUrl }}'">{{ tag.name }}</button>
+{% endfor %}
+</p>
+{% url 'singleEvent' event.pk as eventUrl %}
+{% url 'newThreadInEvent' event.id as newThreadUrl %}
+<button class="eventDetails" onclick="window.location.href='{{ eventUrl }}'">(details button)</button>
+<button class="newThread" onclick="window.location.href='{{ newThreadUrl }}'">(new thread button)</button>
+<ul>
+	{% for thread in event.threads.all %}
+		{% url 'singleThread' thread.pk as viewThreadUrl %}
+		<li><a href="{{ viewThreadUrl }}">{{ thread.title }}</a> | {{ thread.validDate|date:"Hi\z D M j" }} | {{ thread.discussions.all|length }}</li>
+	{% endfor %}
+</ul>
+{% endfor %}
+{% endblock content %}
