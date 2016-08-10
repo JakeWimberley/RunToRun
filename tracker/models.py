@@ -49,7 +49,7 @@ class Discussion(models.Model):
     text = models.TextField()
 
     def __str__(self):
-        return self.author.username + ', ' + self.validDate.strftime(dateFormatStr)
+        return self.author.username + ', ' + self.createdDate.strftime(dateFormatStr)
 
 class Thread(models.Model):
     title = models.TextField()

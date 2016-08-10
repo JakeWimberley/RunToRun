@@ -25,13 +25,14 @@ import datetime
 import pytz
 import re
 
-# Create your views here.
 
 def home(request):
     timelineEvents = Event.objects.filter(Q(owner=request.user) | Q(isPublic=True))
     pinned = Pin.objects.filter(owner=request.user)
+    recentDate = datetime.datetime.now() - datetime.timedelta(days=7)
+    # recentThreads is any thread with a discussion written by this user, and that was created since recentDate
+    recentThreads = Thread.objects.filter(discussions__author=request.user, discussions__createdDate__gte=recentDate).annotate(lastEdit=Max('discussions__createdDate')).order_by('-lastEdit')
     tags = Tag.objects.all().annotate(numEvents=Count('events'))
-    #tags = Tag.objects.all().annotate(numEvents=Count('events'))
     tagScale = tags.aggregate(Max('numEvents'))['numEvents__max'] # number of events in most popular tag
     tagDisplaySizes = {}
     for tag in tags:
@@ -40,6 +41,7 @@ def home(request):
     return render(request, 'tracker/home.html', { \
         'timelineEvents': timelineEvents, \
         'pinned': pinned, \
+        'recentThreads': recentThreads, \
         'newThread': ThreadForm(eventChoices=pinned, selectedChoice=None), \
         'newEvent': EventForm(), \
         'tags': tags, \

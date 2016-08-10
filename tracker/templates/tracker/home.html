@@ -31,6 +31,13 @@
 	<li><a href="{{ eventUrl }}">{{ pinnedEvent }}</a></li>
 {% endfor %}
 </ul>
+<h2>Recent threads</h2>
+<ul>
+{% for thread in recentThreads %}
+{% url 'singleThread' thread.id as threadUrl %}
+	<li><a href="{{ threadUrl }}">{{ thread.title }}</a> | {{ thread.lastEdit|date:"Hi\z D M j" }}</li>
+{% endfor %}
+</ul>
 <h2>Timeline</h2>
 <ul>
 {% for event in timelineEvents %}
