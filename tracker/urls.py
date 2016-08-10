@@ -29,7 +29,7 @@ urlpatterns = [
   url(r'^newThreadInEvent/(\d+)', views.newThread, name='newThreadInEvent'),
   url(r'^event/(\d+)', views.singleEvent, name='singleEvent'),
   url(r'^thread/(\d+)', views.singleThread, name='singleThread'),
-  url(r'^tag/([^\s,\\\']+)', views.singleTag, name='singleTag'),
+  url(r'^tag/([^,\\\']+)', views.singleTag, name='singleTag'),
   url(r'^async/togglePin', views.asyncTogglePin, name='togglePin'),
   url(r'^async/toggleTag', views.asyncToggleTag, name='toggleTag'),
 ]

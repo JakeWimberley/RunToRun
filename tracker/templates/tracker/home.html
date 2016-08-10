@@ -17,6 +17,7 @@
     along with RunToRun.  If not, see <http://www.gnu.org/licenses/>.
 -->
 {% extends 'tracker/base.html' %}
+{% load dictGet %}
 {% block content %}
 <script>
 	$(function() {
@@ -36,6 +37,13 @@
 	<li>{{ event }}</li>
 {% endfor %}
 </ul>
+<h2>Tag cloud {{ tagScale.numEvents__max }}</h2>
+<p>{% for tag in tags %}
+{% with tag.name as tagName %}
+{% url 'singleTag' tagName as tagUrl %}
+<span class="tagText tagTextSize{{ tagDisplaySizes|dictGet:tagName }}" onclick="window.location.href='{{ tagUrl }}'">{{ tagName }}</span>
+{% endwith %}
+{% endfor %}</p>
 <h2>Start something new!</h2>
 <div id="forms">
 	<ul>
