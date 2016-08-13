@@ -32,4 +32,5 @@ urlpatterns = [
   url(r'^tag/([^,\\\']+)', views.singleTag, name='singleTag'),
   url(r'^async/togglePin', views.asyncTogglePin, name='togglePin'),
   url(r'^async/toggleTag', views.asyncToggleTag, name='toggleTag'),
+  url(r'^async/threadsForPeriod', views.asyncThreadsForPeriod, name='threadsForPeriod'),
 ]

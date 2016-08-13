@@ -18,7 +18,7 @@
 """
 from django.shortcuts import render
 from django.db.models import Q, Count, Max
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from .models import Discussion, Event, Pin, Thread, Tag
 from .forms import ThreadForm, DiscussionFormTextOnly, EventForm
 import datetime
@@ -35,6 +35,7 @@ def home(request):
     tags = Tag.objects.all().annotate(numEvents=Count('events'))
     tagScale = tags.aggregate(Max('numEvents'))['numEvents__max'] # number of events in most popular tag
     tagDisplaySizes = {}
+    # scale tags based on popularity
     for tag in tags:
         frac = tag.events.count() / float(tagScale)
         tagDisplaySizes[tag.name] = int(frac * 5)
@@ -268,3 +269,19 @@ def asyncToggleTag(request):
                 tagObj.events.add(eventObj)
         # return comma-delimited list of tags
         return HttpResponse(','.join([str(x) for x in eventObj.tag_set.all()]))
+
+def asyncThreadsForPeriod(request):
+    if request.method == 'GET':
+        timePattern = re.compile(r'(\d{4})-?(\d\d)-?(\d\d)_(\d\d):?(\d\d)')
+        tF = timePattern.match(request.GET['from'])
+        tT = timePattern.match(request.GET['to'])
+        if tF and tT:
+            timeFrom = datetime.datetime(int(tF.group(1), 10), int(tF.group(2), 10), int(tF.group(3), 10), int(tF.group(4), 10), int(tF.group(5), 10), second=0, tzinfo=pytz.UTC)
+            timeTo = datetime.datetime(int(tT.group(1), 10), int(tT.group(2), 10), int(tT.group(3), 10), int(tT.group(4), 10), int(tT.group(5), 10), second=59, tzinfo=pytz.UTC)
+        else:
+            return
+        # return json obj of id's and names (so JS in template can make listbox)
+        resp = {}
+        for t in Thread.objects.filter(validDate__gte=timeFrom,validDate__lte=timeTo).order_by('validDate'):
+            resp["'{0:d}'".format(t.id)] = str(t)
+        return JsonResponse(resp)

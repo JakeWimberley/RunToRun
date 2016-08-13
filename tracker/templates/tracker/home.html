@@ -22,7 +22,34 @@
 <script>
 	$(function() {
 		$( "#forms" ).tabs();
+		$( "#id__startDate" ).blur(function() { getThreadList(); });
+		$( "#id__startTime" ).blur(function() { getThreadList(); });
+		$( "#id__endDate" ).blur(function() { getThreadList(); });
+		$( "#id__endTime" ).blur(function() { getThreadList(); });
 	});
+	function getThreadList() {
+		var dateRe = /^\d{4}-\d\d-\d\d$/;
+		var timeRe = /^\d\d:?\d\d$/;
+		var fromStr;
+		var toStr;
+		// if valid values exist for all 4...
+		if (dateRe.test($('#id__startDate').val()) &&
+		    timeRe.test($('#id__startTime').val()) &&
+		    dateRe.test($('#id__endDate').val()) &&
+		    timeRe.test($('#id__endTime').val())) {
+			fromStr = $('#id__startDate').val() + '_' + $('#id__startTime').val();
+			toStr = $('#id__endDate').val() + '_' + $('#id__endTime').val();
+		} else return;
+		//console.log('fromStr='+fromStr+' '+'toStr='+toStr);
+		$.get('/async/threadsForPeriod', { from: fromStr, to: toStr }, function(newOptions) {
+			// data returned is JSON giving id,name pairs
+			$('#id__threadChoices').empty();
+			$.each(newOptions, function(id,name) {
+				$('#id__threadChoices').append($("<option></option>")
+				.attr("value", id).text(name));
+			});
+		});
+	}
 </script>
 <h2>Pinned events</h2>
 <ul>
@@ -69,7 +96,7 @@
 	<div id="newEvent">
 		<form action="/newEvent/" method="post">
 			{% csrf_token %}
-			<table>
+			<table id="newEventForm">
 			{{ newEvent }}
 			</table>
 			<input type="submit" value="Create event" />
