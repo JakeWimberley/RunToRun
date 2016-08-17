@@ -2,7 +2,7 @@
 {% load staticfiles %}
 <html>
 <head>
-	<title>RunToRun</title>
+	<title>Weathredds</title>
 	<link rel="stylesheet" href="{% static "tracker-global.css" %}">
 	<link rel="stylesheet" href="{% static "jquery-ui.min.css" %}">
 	<script src="{% static "external/jquery/jquery.js" %}"></script>
@@ -17,9 +17,13 @@ $( document ).ready(function() {
 	</script>
 </head>
 <body>
-	<p class="header ui-widget-header ui-corner-all"><span class="leftHalf"><a class="noUnderline" href="{% url 'home' %}">RunToRun</a>: <span id="nameOfView">Home</span></span><span class="rightHalf">You are logged in as {{ request.user.username }}</span></p>
+	<p class="header ui-widget-header ui-corner-all"><span class="leftHalf"><a class="noUnderline" href="{% url 'home' %}">Weathredds</a>: <span id="nameOfView">Home</span></span><span class="rightHalf">
+{% if user.is_authenticated %}
+You are logged in as {{ request.user.username }} <i><a href="{% url 'logout' %}">logout</a></i>
+{% endif %}
+</span></p>
 	{% block content %}
 	{% endblock %}
-	<p class="footer ui-corner-all">RunToRun is open-source software, licensed under the GNU General Public License, version 3.</p>
+	<p class="footer ui-corner-all">Weathredds is open-source software, licensed under the GNU General Public License, version 3.</p>
 </body>
 </html>

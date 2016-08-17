@@ -17,11 +17,12 @@
 		You should have received a copy of the GNU General Public License
 		along with RunToRun.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<html>
-<head>
-</head>
-<body>
-<h2>Adding a new discussion to &quot;{{ threadTitle }}&quot; valid at {{ validTime|date:"Hi\z D M j" }}</h2>
+{% extends 'tracker/base.html' %}
+{% block content %}
+<script>
+	document.getElementById('nameOfView').innerHTML = 'Extend &quot;{{ threadTitle }}&quot;';
+</script>
+<p>Valid at {{ validTime|date:"Hi\z D M j" }}</p>
 <form action="{% url 'extendThread' id %}" method="post">
   {% csrf_token %}
   <table>
@@ -29,5 +30,4 @@
   </table>
   <input type="submit" value="Submit new discussion" />
 </form>
-</body>
-</html>
+{% endblock content %}

@@ -18,7 +18,8 @@
 """
 from django.shortcuts import render
 from django.db.models import Q, Count, Max
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.contrib.auth.decorators import login_required
 from .models import Discussion, Event, Pin, Thread, Tag
 from .forms import ThreadForm, DiscussionFormTextOnly, EventForm
 import datetime
@@ -26,6 +27,7 @@ import pytz
 import re
 
 
+@login_required
 def home(request):
     timelineEvents = Event.objects.filter(Q(owner=request.user) | Q(isPublic=True))
     pinned = Pin.objects.filter(owner=request.user)
@@ -49,7 +51,9 @@ def home(request):
         'tagDisplaySizes': tagDisplaySizes, \
     })
 
+@login_required
 def newThread(request, setEvent=None):
+    #TODO if not logged in, keep form data, prompt for login
     # setEvent is ID of the event to which this thread should be added
     # if set, also redirect to event page, not thread page
     if request.method == 'POST':
@@ -110,6 +114,7 @@ def discussionRange(request, _timeFrom, _timeTo):
         'timeTo': timeTo
     })
 
+@login_required
 def extendThread(request, _id):
     "A standalone discussion form with the validDate and event defined by an existing discussion."
     parent = Thread.objects.get(pk=_id)
@@ -146,6 +151,7 @@ def allDiscussions(request):
         'timeTo': timeTo
     })
 
+@login_required
 def newEvent(request):
     if request.method == 'POST':
         newEvent = EventForm(request.POST)
@@ -175,6 +181,7 @@ def newEvent(request):
         'newEventForm': newEvent \
     })
 
+@login_required
 def singleEvent(request, _id):
     thisEvent = Event.objects.get(id=_id)
     eventThreads = thisEvent.threads.all()
@@ -200,6 +207,7 @@ def singleEvent(request, _id):
         'validDates': validDates, \
     })
 
+@login_required
 def singleTag(request, tagName):
     thisTag = Tag.objects.get(name=tagName)
     relEvents = thisTag.events.all()
@@ -208,6 +216,7 @@ def singleTag(request, tagName):
     })
 
 
+@login_required
 def singleThread(request, _id):
     thisThread = Thread.objects.get(pk=_id)
     relEvents = thisThread.event_set.all()
@@ -228,7 +237,13 @@ def singleThread(request, _id):
     })
 
 def asyncTogglePin(request):
-    # TODO user auth (respond with 'not logged in' or something)
+    '''
+    Toggle pinned status of event with its ID specified in GET field 'event'.
+    Returns status 400 and the word 'unauthenticated' if user is not logged in.
+    Otherwise returns the word 'pinned' or 'unpinned'
+    '''
+    if not request.user.is_authenticated():
+        return HttpResponseBadRequest('unauthenticated')
     if request.method == 'GET':
         eventId = request.GET['event']
         thisEvent = Event.objects.get(id=eventId)
@@ -243,7 +258,13 @@ def asyncTogglePin(request):
             return HttpResponse('pinned')
 
 def asyncToggleTag(request):
-    # TODO user auth (respond with 'not logged in' or something)
+    '''
+    Add/remove tag from an event with specified ID. GET fields 'event' and 'tagName'.
+    Returns status 400 and an empty string if user is not logged in.
+    Otherwise returns the new list of tags
+    '''
+    if not request.user.is_authenticated():
+        return HttpResponseBadRequest()
     if request.method == 'GET':
         eventId = request.GET['event']
         tagName = request.GET['tagName']
@@ -271,6 +292,13 @@ def asyncToggleTag(request):
         return HttpResponse(','.join([str(x) for x in eventObj.tag_set.all()]))
 
 def asyncThreadsForPeriod(request):
+    '''
+    Get a JSON object representing threads that fall in the specified period (GET fields 'from' and 'to').
+    Returns status 400 and an empty string if user is not logged in.
+    Otherwise returns JSON object mapping thread IDs to their names.
+    '''
+    if not request.user.is_authenticated():
+        return HttpResponseBadRequest()
     if request.method == 'GET':
         timePattern = re.compile(r'(\d{4})-?(\d\d)-?(\d\d)_(\d\d):?(\d\d)')
         tF = timePattern.match(request.GET['from'])
