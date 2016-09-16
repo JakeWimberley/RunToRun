@@ -18,7 +18,7 @@
 """
 from django.shortcuts import render
 from django.db.models import Q, Count, Max
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from .models import Discussion, Event, Pin, Thread, Tag
 from .forms import ThreadForm, DiscussionFormTextOnly, EventForm
@@ -45,7 +45,7 @@ def home(request):
         'timelineEvents': timelineEvents, \
         'pinned': pinned, \
         'recentThreads': recentThreads, \
-        'newThread': ThreadForm(eventChoices=pinned, selectedChoice=None), \
+        'newThread': ThreadForm(eventChoices=[x.event for x in pinned], selectedChoice=None), \
         'newEvent': EventForm(), \
         'tags': tags, \
         'tagDisplaySizes': tagDisplaySizes, \
@@ -93,7 +93,7 @@ def newThread(request, setEvent=None):
     return render(request, 'tracker/newThread.html', { \
         'action': formAction, \
         'newThreadForm': newThread \
-  })
+    })
 
 def discussionRange(request, _timeFrom, _timeTo):
     timePattern = re.compile(r'(\d{4})(\d\d)(\d\d)_(\d\d)(\d\d)')
@@ -170,6 +170,10 @@ def newEvent(request):
             else:
                 obj = Event(owner=request.user, title=_title, isPublic=_isPublic, isPermanent=_isPermanent)
             obj.save()
+            _threadIds = newEvent.cleaned_data['_threadChoices']
+            for t in _threadIds:
+                threadObj = Thread.objects.get(pk=t)
+                obj.threads.add(threadObj)
             _isPinned = newEvent.cleaned_data['_isPinned']
             if _isPinned:
                 pin = Pin(owner=request.user, event=obj)
@@ -261,6 +265,8 @@ def asyncToggleTag(request):
     '''
     Add/remove tag from an event with specified ID. GET fields 'event' and 'tagName'.
     Returns status 400 and an empty string if user is not logged in.
+    Returns status 404 if event with specified ID does not exist.
+    Returns status 403 if event is not owned by user and is not public.
     Otherwise returns the new list of tags
     '''
     if not request.user.is_authenticated():
@@ -272,8 +278,10 @@ def asyncToggleTag(request):
         tagName = tagName.replace(',', '-').replace('\\', '/').replace("'", '`').strip()
         try:
             eventObj = Event.objects.get(pk=eventId)
-        except Event.DoesNotExist:
-            return HttpResponse('aint,no,such,event')
+        except Event.DoesNotExist: # 404
+            return HttpResponseNotFound()
+        if request.user != eventObj.owner: # 403
+            return HttpResponseForbidden()
         try:
             tagObj = Tag.objects.get(name=tagName)
         except Tag.DoesNotExist:
