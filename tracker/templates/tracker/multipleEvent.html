@@ -23,7 +23,7 @@
 	document.getElementById('nameOfView').innerHTML = 'Event selection';
 	$(function() {
 		$("button.eventDetails").button({
-			icons: { primary: "ui-icon-extlink" },
+			icons: { primary: "ui-icon-comment" },
 			label: 'Details'
 		});
 		$("button.newThread").button({
@@ -33,6 +33,7 @@
 	});
 </script>
 {% for event in events %}
+{% if event.isPublic %}
 <h2>{{ event.title }}</h2>
 <p><span class="ui-icon ui-icon-person" style="display: inline-block"></span> {{ event.owner }}</p>
 <p><span class="ui-icon ui-icon-clock" style="display: inline-block"></span> {{ event.describeTimeRange }}</p>
@@ -52,5 +53,6 @@
 		<li><a href="{{ viewThreadUrl }}">{{ thread.title }}</a> | {{ thread.validDate|date:"Hi\z D M j" }} | {{ thread.discussions.all|length }}</li>
 	{% endfor %}
 </ul>
+{% endif %}
 {% endfor %}
 {% endblock content %}
