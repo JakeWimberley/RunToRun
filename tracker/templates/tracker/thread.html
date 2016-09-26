@@ -2,11 +2,63 @@
 <script>
 	$(function() {
 		$( ".oneThread" ).accordion();
+		$("button.extendLink").button({
+			icons: { primary: "ui-icon-circle-plus" },
+			label: 'Extend'
+		});
 	});
 </script>
 {% for key in threadKeys %}
 <h2>{{ threadTitles|dictGet:key }}</h2>
 <p>Valid {{ validDates|dictGet:key|date:"Hi\z D M j" }}</p>
+<script>
+$( function() {
+<!-- TODO: reuse javascript across all buttons -->
+{% if allowEdits|dictGet:key %}
+	{% if extensibility|dictGet:key %}
+			$("button#freeze{{key}}").button({
+				icons: { primary: "ui-icon-locked" },
+				label: 'Freeze'
+			});
+			$("button#extend{{key}}").show();
+	{% else %}
+			$("button#freeze{{key}}").button({
+				icons: { primary: "ui-icon-unlocked" },
+				label: 'Unfreeze'
+			});
+			$("button#extend{{key}}").hide();
+	{% endif %}
+	$("button#freeze{{key}}").click(function() {
+		$.get('/async/toggleFrozen', { thread: {{ key }} }, function(data) {
+			if (data == 'unfrozen') {
+				$("button#freeze{{key}}").button({
+					icons: { primary: "ui-icon-locked" },
+					label: 'Freeze'
+				});
+				$("button#extend{{key}}").show();
+			} else if (data == 'frozen') {
+				$("button#freeze{{key}}").button({
+					icons: { primary: "ui-icon-unlocked" },
+					label: 'Unfreeze'
+				});
+				$("button#extend{{key}}").hide();
+			}
+		});
+	});
+{% else %}
+	$("button#freeze{{key}}").hide();
+	{% if not extensibility|dictGet:key %}
+	$("button#extend{{key}}").button({
+		icons: { primary: "ui-icon-locked" },
+		label: 'Frozen'
+	}).button("disable");
+	{% endif %}
+{% endif %}
+});
+</script>
+	<button id="freeze{{key}}">freeze/unfreeze</button>
+	{% url 'extendThread' key as extendThread %}
+	<button class="extendLink" id="extend{{key}}" onclick="window.location.href='{{ extendThread }}'">extend</button>
 <div class="oneThread">
 {% for disco in discussionSets|dictGet:key %}
 	<h3>{{ disco.createdDate|date:"Hi\z D M j" }} ({{ disco.author }})</h3>
@@ -14,9 +66,7 @@
 		<p>{{ disco.text }}</p>
 	</div>
 {% if forloop.last %}
-{% url 'extendThread' key as extendThread %}
-	<h3>Extend this thread with another discussion</h3>
-	<div><a href="{{ extendThread }}">Click here</a></div>
+
 {% endif %}
 {% endfor %}
 </div>

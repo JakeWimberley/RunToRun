@@ -55,6 +55,7 @@ class Thread(models.Model):
     title = models.TextField()
     validDate = models.DateTimeField(default=timezone.now)
     discussions = models.ManyToManyField(Discussion, blank=True)
+    isExtensible = models.BooleanField(default=True)
 
     def __str__(self):
         return self.title + ' (' + self.validDate.strftime(dateFormatStr) + ')'

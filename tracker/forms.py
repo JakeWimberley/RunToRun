@@ -14,6 +14,7 @@ class ThreadForm(forms.Form):
     _title = forms.CharField(label='title')
     _validDate = forms.DateField(label='valid date (UTC)',widget=jqDateInput)
     _validTime = forms.TimeField(label='valid time (UTC)',widget=jqTimeInput,input_formats=['%H:%M','%H%M'])
+    _isExtensible = forms.BooleanField(required=False,initial=True,label='allow extension by other users')
     _text = forms.CharField(label='the first discussion',widget=forms.Textarea)
 
 class DiscussionFormTextOnly(forms.Form):
@@ -33,4 +34,5 @@ class EventForm(forms.Form):
     _endDate = forms.DateField(required=False,label='end date (UTC, optional unless start date defined)',widget=jqDateInput)
     _endTime = forms.TimeField(required=False,label='end time (UTC, optional)',widget=jqTimeInput,input_formats=['%H:%M','%H%M'])
     # thread choice field will be populated asynchronously based on time specs
-    _threadChoices = forms.MultipleChoiceField(label='associate with threads (optional)',required=False,choices=[(x.id,str(x)) for x in Thread.objects.all()])
+    # NOTE choices code seems to cause problem with migration
+    _threadChoices = forms.MultipleChoiceField(label='associate with threads (optional)',required=False) #choices=[(x.id,str(x)) for x in Thread.objects.all()])

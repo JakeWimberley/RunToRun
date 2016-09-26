@@ -17,7 +17,7 @@
     along with RunToRun.  If not, see <http://www.gnu.org/licenses/>.
 """
 from django.shortcuts import render
-from django.db.models import Q, Count, Max
+from django.db.models import Q, Count, Max, Min
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from .models import Discussion, Event, Pin, Thread, Tag
@@ -66,12 +66,13 @@ def newThread(request, setEvent=None):
             _validTime = newThread.cleaned_data['_validTime']
             _title = newThread.cleaned_data['_title']
             _text = newThread.cleaned_data['_text']
+            _isExtensible = newThread.cleaned_data['_isExtensible']
             _valid = datetime.datetime.combine(_validDate, _validTime)
             _valid = _valid.replace(tzinfo=pytz.UTC)
             # make discussion object, then add it to a new thread object
             discoObj = Discussion(author=request.user, text=_text)
             discoObj.save()
-            threadObj = Thread(title=_title, validDate=_valid)
+            threadObj = Thread(title=_title, validDate=_valid, isExtensible=_isExtensible)
             threadObj.save()
             threadObj.discussions.add(discoObj)
             threadObj.save()
@@ -118,6 +119,10 @@ def discussionRange(request, _timeFrom, _timeTo):
 def extendThread(request, _id):
     "A standalone discussion form with the validDate and event defined by an existing discussion."
     parent = Thread.objects.get(pk=_id)
+    if not parent.isExtensible:
+        return render(request, 'tracker/accessDenied.html', {
+            'reason': 'This thread has been frozen by the user who originated it.'
+        })
     _valid = parent.validDate
     if request.method == 'POST':
         newDiscussion = DiscussionFormTextOnly(request.POST)
@@ -188,16 +193,29 @@ def newEvent(request):
 @login_required
 def singleEvent(request, _id):
     thisEvent = Event.objects.get(id=_id)
+    # if event is private, and user is not the owner, don't show
+    if not thisEvent.isPublic and thisEvent.owner != request.user:
+        return render(request, 'tracker/accessDenied.html', {
+            'reason': 'The owner of this event has chosen to keep it private. Other users are not allowed to view it.'
+        })
     eventThreads = thisEvent.threads.all()
     threadKeys = [x['id'] for x in eventThreads.values('id').order_by('validDate')]
     discussions = {}
     threadTitles = {}
     validDates = {}
+    extensibility = {}
     discos = {}
+    allowEdits = {}
     for key in threadKeys:
         discussions[key] = eventThreads.get(id=key).discussions.all().order_by('-createdDate')
         threadTitles[key] = eventThreads.get(id=key).title
         validDates[key] = eventThreads.get(id=key).validDate
+        extensibility[key] = eventThreads.get(id=key).isExtensible
+        # the author of the first discussion is considered the "owner" of the thread
+        allowEdits[key] = False
+        minPk = discussions[key].aggregate(Min("pk"))
+        if discussions[key].get(pk=minPk['pk__min']).author == request.user:
+            allowEdits[key] = True
     pinStatus = Pin.objects.filter(event=thisEvent.pk).exists()
     return render(request, 'tracker/singleEvent.html', { \
         'event': thisEvent, \
@@ -209,6 +227,8 @@ def singleEvent(request, _id):
         'discussionSets': discussions, \
         'threadTitles': threadTitles, \
         'validDates': validDates, \
+        'extensibility': extensibility, \
+        'allowEdits': allowEdits, \
     })
 
 @login_required
@@ -228,16 +248,26 @@ def singleThread(request, _id):
     discussions = {}
     threadTitles = {}
     validDates = {}
+    extensibility = {}
     threadKeys[_id] = thisThread.pk
     discussions[_id] = thisThread.discussions.all().order_by('-createdDate')
     threadTitles[_id] = thisThread.title
     validDates[_id] = thisThread.validDate
+    extensibility[_id] = thisThread.isExtensible
+    # the author of the first discussion is considered the "owner" of the thread
+    allowEdits = {}
+    allowEdits[_id] = False
+    minPk = thisThread.discussions.all().aggregate(Min("pk"))
+    if thisThread.discussions.get(pk=minPk['pk__min']).author == request.user:
+        allowEdits[_id] = True
     return render(request, 'tracker/singleThread.html', { \
         'relEvents': relEvents, \
         'threadKeys': threadKeys, \
         'discussionSets': discussions, \
         'threadTitles': threadTitles, \
+        'extensibility': extensibility, \
         'validDates': validDates, \
+        'allowEdits': allowEdits, \
     })
 
 def asyncTogglePin(request):
@@ -319,5 +349,25 @@ def asyncThreadsForPeriod(request):
         # return json obj of id's and names (so JS in template can make listbox)
         resp = {}
         for t in Thread.objects.filter(validDate__gte=timeFrom,validDate__lte=timeTo).order_by('validDate'):
-            resp["'{0:d}'".format(t.id)] = str(t)
+            resp["{0:d}".format(t.id)] = str(t) #should key be in '' ?
         return JsonResponse(resp)
+    
+def asyncToggleFrozen(request):
+    '''
+    Toggle isExtensible on the thread with its ID specified in GET field 'thread'.
+    Returns status 400 and the word 'unauthenticated' if user is not logged in.
+    Otherwise returns the string 'frozen' or 'unfrozen' to indicate the new value
+    '''
+    if not request.user.is_authenticated():
+        return HttpResponseBadRequest('unauthenticated')
+    if request.method == 'GET':
+        threadId = request.GET['thread']
+        thisThread = Thread.objects.get(id=threadId)
+        if thisThread.isExtensible:
+            thisThread.isExtensible = False
+            thisThread.save()
+            return HttpResponse('frozen')
+        else:
+            thisThread.isExtensible = True
+            thisThread.save()
+            return HttpResponse('unfrozen')
