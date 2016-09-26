@@ -53,7 +53,6 @@ def home(request):
 
 @login_required
 def newThread(request, setEvent=None):
-    #TODO if not logged in, keep form data, prompt for login
     # setEvent is ID of the event to which this thread should be added
     # if set, also redirect to event page, not thread page
     if request.method == 'POST':
@@ -89,8 +88,15 @@ def newThread(request, setEvent=None):
             newThread = ThreadForm(eventChoices=Pin.objects.filter(owner=request.user), selectedChoice=None)
             formAction = '/newThread/'
         else:
-            newThread = ThreadForm(eventChoices=Event.objects.filter(id=setEvent), selectedChoice=setEvent)
-            formAction = '/newThreadInEvent/' + setEvent
+            # specified event must be public, or owned by user, in order to continue
+            eventsRequested = Event.objects.filter(id=setEvent)
+            if eventsRequested[0].owner == request.user or eventsRequested[0].isPublic:
+                newThread = ThreadForm(eventChoices=eventsRequested, selectedChoice=setEvent)
+                formAction = '/newThreadInEvent/' + setEvent
+            else:
+                return render(request, 'tracker/accessDenied.html', {
+                    'reason': 'This event belongs to another user, and that user has chosen to keep it private.'
+                })
     return render(request, 'tracker/newThread.html', { \
         'action': formAction, \
         'newThreadForm': newThread \
@@ -119,9 +125,10 @@ def discussionRange(request, _timeFrom, _timeTo):
 def extendThread(request, _id):
     "A standalone discussion form with the validDate and event defined by an existing discussion."
     parent = Thread.objects.get(pk=_id)
+    # TODO probably should let user extend own threads even if !isExtensible
     if not parent.isExtensible:
         return render(request, 'tracker/accessDenied.html', {
-            'reason': 'This thread has been frozen by the user who originated it.'
+            'reason': 'This thread has been frozen by its steward.'
         })
     _valid = parent.validDate
     if request.method == 'POST':
@@ -207,14 +214,13 @@ def singleEvent(request, _id):
     discos = {}
     allowEdits = {}
     for key in threadKeys:
-        discussions[key] = eventThreads.get(id=key).discussions.all().order_by('-createdDate')
-        threadTitles[key] = eventThreads.get(id=key).title
-        validDates[key] = eventThreads.get(id=key).validDate
-        extensibility[key] = eventThreads.get(id=key).isExtensible
-        # the author of the first discussion is considered the "owner" of the thread
+        thisThread = eventThreads.get(id=key)
+        discussions[key] = thisThread.discussions.all().order_by('-createdDate')
+        threadTitles[key] = thisThread.title
+        validDates[key] = thisThread.validDate
+        extensibility[key] = thisThread.isExtensible
         allowEdits[key] = False
-        minPk = discussions[key].aggregate(Min("pk"))
-        if discussions[key].get(pk=minPk['pk__min']).author == request.user:
+        if getThreadSteward(thisThread) == request.user:
             allowEdits[key] = True
     pinStatus = Pin.objects.filter(event=thisEvent.pk).exists()
     return render(request, 'tracker/singleEvent.html', { \
@@ -244,6 +250,19 @@ def singleTag(request, tagName):
 def singleThread(request, _id):
     thisThread = Thread.objects.get(pk=_id)
     relEvents = thisThread.event_set.all()
+    steward = getThreadSteward(thisThread)
+    # if user is not steward of thread, check events to see if thread is part of a public event
+    # if not, deny access
+    allowAccess = False
+    if steward != request.user:
+        for event in relEvents:
+            if event.isPublic: allowAccess = True
+    else:
+        allowAccess = True
+    if not allowAccess:
+        return render(request, 'tracker/accessDenied.html', {
+            'reason': 'Another user is the steward of this thread, and that user has not made it part of any public event.'
+        })
     threadKeys = {}
     discussions = {}
     threadTitles = {}
@@ -254,11 +273,9 @@ def singleThread(request, _id):
     threadTitles[_id] = thisThread.title
     validDates[_id] = thisThread.validDate
     extensibility[_id] = thisThread.isExtensible
-    # the author of the first discussion is considered the "owner" of the thread
     allowEdits = {}
     allowEdits[_id] = False
-    minPk = thisThread.discussions.all().aggregate(Min("pk"))
-    if thisThread.discussions.get(pk=minPk['pk__min']).author == request.user:
+    if steward == request.user:
         allowEdits[_id] = True
     return render(request, 'tracker/singleThread.html', { \
         'relEvents': relEvents, \
@@ -371,3 +388,8 @@ def asyncToggleFrozen(request):
             thisThread.isExtensible = True
             thisThread.save()
             return HttpResponse('unfrozen')
+
+def getThreadSteward(thread):
+    # the author of the first discussion is considered the "owner" of the thread
+    minPk = thread.discussions.all().aggregate(Min("pk"))
+    return thread.discussions.get(pk=minPk['pk__min']).author
