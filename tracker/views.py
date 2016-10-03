@@ -239,10 +239,16 @@ def singleEvent(request, _id):
 
 @login_required
 def singleTag(request, tagName):
-    thisTag = Tag.objects.get(name=tagName)
-    relEvents = thisTag.events.all()
+    try:
+        thisTag = Tag.objects.get(name=tagName)
+        relEvents = thisTag.events.all()
+        someArePrivate = thisTag.events.filter(isPublic=False).count() > 0
+    except:
+        relEvents = None
+        someArePrivate = False
     return render(request, 'tracker/multipleEvent.html', { \
         'events': relEvents, \
+        'someArePrivate': someArePrivate,
     })
 
 

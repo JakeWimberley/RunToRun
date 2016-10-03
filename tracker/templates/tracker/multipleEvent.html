@@ -54,5 +54,11 @@
 	{% endfor %}
 </ul>
 {% endif %}
+{% empty %} {# there are no events at all #}
+<p>No events have been associated with this tag.</p>
 {% endfor %}
+{% if someArePrivate %}
+<div class="ui-state-highlight ui-corner-all"><p><span class="ui-icon ui-icon-info" style="display: inline-block; margin-left: 0.5em; margin-right: 0.5em;"></span>One or more private events
+have been associated with this tag. These are not being shown.</p></div>
+{% endif %}
 {% endblock content %}
