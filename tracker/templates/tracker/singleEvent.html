@@ -114,16 +114,24 @@
 			icons: { primary: "ui-icon-pencil" },
 			label: 'New thread in this event'
 		})
+		$("button.change").button({
+			icons: { primary: "ui-icon-wrench" },
+			label: 'Change details'
+		})
 	});
 </script>
 <p>Created {{ event.createdDate|date:"Hi\z D M j" }} by {{ event.owner }}</p>
 {% url 'newThreadInEvent' event.id as newThreadUrl %}
-<button id="pin">(pin button)</button>
 <button class="newThread" onclick="window.location.href='{{ newThreadUrl }}'">(new thread button)</button>
+
+{% url 'changeEvent' event.id as changeUrl %}
+<button id="pin">(pin button)</button>
 {% if event.owner != request.user %}
 <span id="tagWidgetGroup"><span id="tags"></span></span>
 {% else %}
+<button class="change" onclick="window.location.href='{{ changeUrl }}'">(change button)</button>
 <span id="tagWidgetGroup"><input id="newTagEntry" type="text" placeholder="type new tag..."> <span id="tags"></span></span>
 {% endif %}
+
 {% include 'tracker/thread.html' %}
 {% endblock content %}

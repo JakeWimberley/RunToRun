@@ -1,6 +1,6 @@
 from django import forms
 from functools import partial
-from .models import Thread
+from .models import Thread, Event
 
 jqDateInput = forms.DateInput(attrs={'class':'uiDatepicker'})
 jqTimeInput = forms.TimeInput() # TODO maybe not necessary
@@ -36,3 +36,13 @@ class EventForm(forms.Form):
     # thread choice field will be populated asynchronously based on time specs
     # NOTE choices code seems to cause problem with migration
     _threadChoices = forms.MultipleChoiceField(label='associate with threads (optional)',required=False) #choices=[(x.id,str(x)) for x in Thread.objects.all()])
+
+class ChangeEventForm(forms.ModelForm):
+    class Meta:
+        model = Event
+        fields = ['title','startDate','endDate','isPublic','isPermanent']
+
+class ChangeThreadForm(forms.ModelForm):
+    class Meta:
+        model = Thread
+        fields = ['title','validDate']

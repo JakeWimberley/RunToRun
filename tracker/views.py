@@ -20,8 +20,9 @@ from django.shortcuts import render
 from django.db.models import Q, Count, Max, Min
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
+from django.views.generic.edit import UpdateView
 from .models import Discussion, Event, Pin, Thread, Tag
-from .forms import ThreadForm, DiscussionFormTextOnly, EventForm
+from .forms import ThreadForm, DiscussionFormTextOnly, EventForm, ChangeEventForm
 import datetime
 import pytz
 import re
@@ -196,6 +197,28 @@ def newEvent(request):
     return render(request, 'tracker/newEvent.html', { \
         'newEventForm': newEvent \
     })
+
+
+class ChangeEvent(UpdateView):
+    template_name = 'tracker/changeEvent.html'
+    form_class = ChangeEventForm
+    model = Event
+
+    def form_valid(self, form):
+        if self.request.user.is_authenticated: 
+            if self.request.user == self.object.owner:
+                self.object = form.save()
+                return HttpResponseRedirect('/event/{0:d}'.format(self.object.pk))
+            else:
+                return render(self.request, 'tracker/accessDenied.html', {
+                    'reason': 'You are not allowed to change an event you don\'t own.'
+                })
+        else:
+            return render(self.request, 'tracker/accessDenied.html', {
+                'reason': 'Yaint logged in.'
+            })
+        return super(ChangeEvent, self).form_valid(form)
+
 
 @login_required
 def singleEvent(request, _id):
@@ -396,6 +419,6 @@ def asyncToggleFrozen(request):
             return HttpResponse('unfrozen')
 
 def getThreadSteward(thread):
-    # the author of the first discussion is considered the "owner" of the thread
+    # the author of the first discussion is considered the "owner" or "steward" of the thread
     minPk = thread.discussions.all().aggregate(Min("pk"))
     return thread.discussions.get(pk=minPk['pk__min']).author

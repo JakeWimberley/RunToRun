@@ -64,7 +64,7 @@ class Event(models.Model):
 # TODO summary and conclusion (isConcluded)
     title = models.CharField(max_length=120)
     createdDate = models.DateTimeField(default=timezone.now)
-    startDate = models.DateTimeField(null=True, blank=True, verbose_name='start date (if blank, event time range is defined by that of threads')
+    startDate = models.DateTimeField(null=True, blank=True, verbose_name='start date (if blank, event time range is defined by that of threads)')
     endDate = models.DateTimeField(null=True, blank=True, verbose_name='end date (only used if start date is defined)')
     owner = models.ForeignKey('auth.User')
     threads = models.ManyToManyField(Thread, blank=True)
