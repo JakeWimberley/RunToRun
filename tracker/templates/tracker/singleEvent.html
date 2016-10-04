@@ -121,6 +121,7 @@
 	});
 </script>
 <p>Created {{ event.createdDate|date:"Hi\z D M j" }} by {{ event.owner }}</p>
+<p>Date range is {{ event.describeTimeRange }}</p>
 {% url 'newThreadInEvent' event.id as newThreadUrl %}
 <button class="newThread" onclick="window.location.href='{{ newThreadUrl }}'">(new thread button)</button>
 
