@@ -22,7 +22,7 @@ from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpRe
 from django.contrib.auth.decorators import login_required
 from django.views.generic.edit import UpdateView
 from .models import Discussion, Event, Pin, Thread, Tag
-from .forms import ThreadForm, DiscussionFormTextOnly, EventForm, ChangeEventForm
+from .forms import ThreadForm, DiscussionFormTextOnly, EventForm, ChangeEventForm, ChangeThreadForm
 import datetime
 import pytz
 import re
@@ -218,6 +218,27 @@ class ChangeEvent(UpdateView):
                 'reason': 'Yaint logged in.'
             })
         return super(ChangeEvent, self).form_valid(form)
+
+
+class ChangeThread(UpdateView):
+    template_name = 'tracker/changeEvent.html'
+    form_class = ChangeThreadForm
+    model = Thread
+
+    def form_valid(self, form):
+        if self.request.user.is_authenticated: 
+            if self.request.user == getThreadSteward(self.object):
+                self.object = form.save()
+                return HttpResponseRedirect('/thread/{0:d}'.format(self.object.pk))
+            else:
+                return render(self.request, 'tracker/accessDenied.html', {
+                    'reason': "You are not allowed to change a thread for which you aren't the steward."
+                })
+        else:
+            return render(self.request, 'tracker/accessDenied.html', {
+                'reason': 'Yaint logged in.'
+            })
+        return super(ChangeThread, self).form_valid(form)
 
 
 @login_required

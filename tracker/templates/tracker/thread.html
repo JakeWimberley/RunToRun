@@ -12,8 +12,12 @@
 <h2>{{ threadTitles|dictGet:key }}</h2>
 <p>Valid {{ validDates|dictGet:key|date:"Hi\z D M j" }}</p>
 <script>
-$( function() {
 <!-- TODO: reuse javascript across all buttons -->
+$( function() {
+	$("button#change{{key}}").button({
+		icons: { primary: "ui-icon-wrench" },
+		label: 'Change details'
+	})
 {% if allowEdits|dictGet:key %}
 	{% if extensibility|dictGet:key %}
 			$("button#freeze{{key}}").button({
@@ -56,6 +60,8 @@ $( function() {
 {% endif %}
 });
 </script>
+{% url 'changeThread' key as changeUrl %}
+	<button id="change{{key}}" onclick="window.location.href='{{ changeUrl }}'">change</button>
 	<button id="freeze{{key}}">freeze/unfreeze</button>
 	{% url 'extendThread' key as extendThread %}
 	<button class="extendLink" id="extend{{key}}" onclick="window.location.href='{{ extendThread }}'">extend</button>

@@ -19,7 +19,7 @@
 from django.conf.urls import url, include
 from django.contrib.auth import views as auth_views
 from . import views
-from .views import ChangeEvent
+from .views import ChangeEvent, ChangeThread
 
 urlpatterns = [
     url(r'^$', views.home, name='home'),
@@ -37,6 +37,7 @@ urlpatterns = [
     url(r'^event/(\d+)', views.singleEvent, name='singleEvent'),
     url(r'^thread/(\d+)', views.singleThread, name='singleThread'),
     url(r'^changeEvent/(?P<pk>\d+)', ChangeEvent.as_view(), name='changeEvent'),
+    url(r'^changeThread/(?P<pk>\d+)', ChangeThread.as_view(), name='changeThread'),
     url(r'^tag/([^,\\\']+)', views.singleTag, name='singleTag'),
     url(r'^async/togglePin', views.asyncTogglePin, name='togglePin'),
     url(r'^async/toggleTag', views.asyncToggleTag, name='toggleTag'),
