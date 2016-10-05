@@ -25,12 +25,14 @@ $( function() {
 				label: 'Freeze'
 			});
 			$("button#extend{{key}}").show();
+			$("button#change{{key}}").show();
 	{% else %}
 			$("button#freeze{{key}}").button({
 				icons: { primary: "ui-icon-unlocked" },
 				label: 'Unfreeze'
 			});
 			$("button#extend{{key}}").hide();
+			$("button#change{{key}}").hide();
 	{% endif %}
 	$("button#freeze{{key}}").click(function() {
 		$.get('/async/toggleFrozen', { thread: {{ key }} }, function(data) {
@@ -40,12 +42,14 @@ $( function() {
 					label: 'Freeze'
 				});
 				$("button#extend{{key}}").show();
+				$("button#change{{key}}").show();
 			} else if (data == 'frozen') {
 				$("button#freeze{{key}}").button({
 					icons: { primary: "ui-icon-unlocked" },
 					label: 'Unfreeze'
 				});
 				$("button#extend{{key}}").hide();
+				$("button#change{{key}}").hide();
 			}
 		});
 	});
@@ -61,10 +65,10 @@ $( function() {
 });
 </script>
 {% url 'changeThread' key as changeUrl %}
-	<button id="change{{key}}" onclick="window.location.href='{{ changeUrl }}'">change</button>
 	<button id="freeze{{key}}">freeze/unfreeze</button>
 	{% url 'extendThread' key as extendThread %}
 	<button class="extendLink" id="extend{{key}}" onclick="window.location.href='{{ extendThread }}'">extend</button>
+	<button id="change{{key}}" onclick="window.location.href='{{ changeUrl }}'">change</button>
 <div class="oneThread">
 {% for disco in discussionSets|dictGet:key %}
 	<h3>{{ disco.createdDate|date:"Hi\z D M j" }} ({{ disco.author }})</h3>
