@@ -43,4 +43,5 @@ urlpatterns = [
     url(r'^async/toggleTag', views.asyncToggleTag, name='toggleTag'),
     url(r'^async/toggleFrozen', views.asyncToggleFrozen, name='toggleFrozen'),
     url(r'^async/threadsForPeriod', views.asyncThreadsForPeriod, name='threadsForPeriod'),
+    url(r'^async/eventsAtTime', views.asyncEventsAtTime, name='eventsAtTime'),
 ]

@@ -228,7 +228,11 @@ class ChangeThread(UpdateView):
 
     def form_valid(self, form):
         if self.request.user.is_authenticated: 
-            if self.request.user == getThreadSteward(self.object):
+            if not self.object.isExtensible:
+                return render(self.request, 'tracker/accessDenied.html', {
+                    'reason': "This thread has been frozen, and must be unfrozen by its steward to allow changes."
+                })
+            elif self.request.user == getThreadSteward(self.object):
                 self.object = form.save()
                 return HttpResponseRedirect('/thread/{0:d}'.format(self.object.pk))
             else:
@@ -302,15 +306,7 @@ def singleThread(request, _id):
     thisThread = Thread.objects.get(pk=_id)
     relEvents = thisThread.event_set.all()
     steward = getThreadSteward(thisThread)
-    # if user is not steward of thread, check events to see if thread is part of a public event
-    # if not, deny access
-    allowAccess = False
-    if steward != request.user:
-        for event in relEvents:
-            if event.isPublic: allowAccess = True
-    else:
-        allowAccess = True
-    if not allowAccess:
+    if not threadIsAccessible(thisThread, request.user):
         return render(request, 'tracker/accessDenied.html', {
             'reason': 'Another user is the steward of this thread, and that user has not made it part of any public event.'
         })
@@ -417,7 +413,29 @@ def asyncThreadsForPeriod(request):
         # return json obj of id's and names (so JS in template can make listbox)
         resp = {}
         for t in Thread.objects.filter(validDate__gte=timeFrom,validDate__lte=timeTo).order_by('validDate'):
-            resp["{0:d}".format(t.id)] = str(t) #should key be in '' ?
+            if threadIsAccessible(t,request.user): resp["{0:d}".format(t.id)] = str(t)
+        return JsonResponse(resp)
+
+def asyncEventsAtTime(request):
+    '''
+    Get a JSON object representing events that span the specified point in time (GET field 'when').
+    Returns status 400 and an empty string if user is not logged in.
+    Otherwise returns JSON object mapping thread IDs to their names.
+    '''
+    if not request.user.is_authenticated():
+        return HttpResponseBadRequest()
+    if request.method == 'GET':
+        timePattern = re.compile(r'(\d{4})-?(\d\d)-?(\d\d)_(\d\d):?(\d\d)')
+        when = timePattern.match(request.GET['when'])
+        if when:
+            timePoint = datetime.datetime(int(when.group(1), 10), int(when.group(2), 10), int(when.group(3), 10), int(when.group(4), 10), int(when.group(5), 10), second=0, tzinfo=pytz.UTC)
+        else:
+            return
+        # return json obj mapping pk to identifying info
+        resp = {}
+        for e in Event.objects.filter(startDate__lte=timePoint,endDate__gte=timePoint).order_by('validDate'):
+            if e.owner == request.user or e.isPublic:
+                resp["{0:d}".format(e.pk)] = [e.title, e.describeTimeRange, e.owner]
         return JsonResponse(resp)
     
 def asyncToggleFrozen(request):
@@ -444,3 +462,13 @@ def getThreadSteward(thread):
     # the author of the first discussion is considered the "owner" or "steward" of the thread
     minPk = thread.discussions.all().aggregate(Min("pk"))
     return thread.discussions.get(pk=minPk['pk__min']).author
+
+def threadIsAccessible(thread, user):
+    # if user is not steward of thread, check events to see if thread is part of a public event
+    # if not, return false to indicate access should be denied
+    if getThreadSteward(thread) == user:
+        return True
+    else:
+        for event in thread.event_set.all():
+            if event.isPublic: return True
+    return False
