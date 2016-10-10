@@ -6,6 +6,10 @@
 			icons: { primary: "ui-icon-circle-plus" },
 			label: 'Extend'
 		});
+		$("button.relateLink").button({
+			icons: { primary: "ui-icon-link" },
+			label: 'Related events'
+		});
 	});
 </script>
 {% for key in threadKeys %}
@@ -68,6 +72,7 @@ $( function() {
 	<button id="freeze{{key}}">freeze/unfreeze</button>
 	{% url 'extendThread' key as extendThread %}
 	<button class="extendLink" id="extend{{key}}" onclick="window.location.href='{{ extendThread }}'">extend</button>
+	<button class="relateLink" id="relate{{key}}" onclick="populateFormThreadToEvent('{{ validDates|dictGet:key|date:"Y-m-d_H:i" }}',{{key}})">relate</button>
 	<button id="change{{key}}" onclick="window.location.href='{{ changeUrl }}'">change</button>
 <div class="oneThread">
 {% for disco in discussionSets|dictGet:key %}

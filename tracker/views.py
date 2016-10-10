@@ -419,6 +419,7 @@ def asyncThreadsForPeriod(request):
 def asyncEventsAtTime(request):
     '''
     Get a JSON object representing events that span the specified point in time (GET field 'when').
+    GET field 'threadId' can optionally be set to indicate which event(s) are already associated with that thread.
     Returns status 400 and an empty string if user is not logged in.
     Otherwise returns JSON object mapping thread IDs to their names.
     '''
@@ -431,11 +432,15 @@ def asyncEventsAtTime(request):
             timePoint = datetime.datetime(int(when.group(1), 10), int(when.group(2), 10), int(when.group(3), 10), int(when.group(4), 10), int(when.group(5), 10), second=0, tzinfo=pytz.UTC)
         else:
             return
+        if request.GET['threadId'] is not None:
+            specThread = Thread.objects.get(id=request.GET['threadId'])
         # return json obj mapping pk to identifying info
         resp = {}
-        for e in Event.objects.filter(startDate__lte=timePoint,endDate__gte=timePoint).order_by('validDate'):
+        for e in Event.objects.filter(startDate__lte=timePoint,endDate__gte=timePoint).order_by('startDate'):
+            threadStatus = False # initially assume not associated with event
+            if specThread in e.threads.all(): threadStatus = True
             if e.owner == request.user or e.isPublic:
-                resp["{0:d}".format(e.pk)] = [e.title, e.describeTimeRange, e.owner]
+                resp["{0:d}".format(e.pk)] = [e.title, str(e.owner), threadStatus]
         return JsonResponse(resp)
     
 def asyncToggleFrozen(request):
