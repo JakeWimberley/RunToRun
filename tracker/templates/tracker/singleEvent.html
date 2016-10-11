@@ -19,50 +19,10 @@
 -->
 {% extends 'tracker/base.html' %}
 {% block content %}
+{% load static %}
+<script src="{% static "relations.js" %}"></script>
 <script>
 	document.getElementById('nameOfView').innerHTML = 'Event &quot;{{ event.title }}&quot;';
-
-	// depends on the presence of a div w/ id="threadToEventModal"
-	// with CSS making it modal (or at the minimum, hidden on load)
-	// containing fieldset w/ id="threadToEventFields"
-	// the fieldset should be part of a form otherwise defined in the div
-	function populateFormThreadToEvent(whenStr,id) {
-		$.get('/async/eventsAtTime', { when: whenStr, threadId: id }, function(eventData) {
-			// obj returned maps event pk -> [title, timerange, owner, should-be-checked]
-			$('#threadToEventFields').empty().append($("<legend>Matching datetime " + whenStr + "</legend>"));
-			$.each(eventData, function(pk,info) {
-				var title = info[0];
-				var owner = info[1];
-				var bCheck = info[2];
-				if (bCheck) {
-					$('#threadToEventFields').append($("<input>")
-					.attr({
-						type: "checkbox",
-						class: "relationSelection",
-						name: "newRelations",
-						value: pk,
-						id: "selection" + pk,
-						checked: "checked",
-					}));
-					$('#threadToEventFields').append($("<label>"+title+"</label>").attr("for","selection"+pk));
-					$('#threadToEventFields').append($("<br>"));
-				} else {
-					$('#threadToEventFields').append($("<input>")
-					.attr({
-						type: "checkbox",
-						class: "relationSelection",
-						name: "newRelations",
-						value: pk,
-						id: "selection" + pk,
-					}));
-					$('#threadToEventFields').append($("<label>"+title+"</label>").attr("for","selection"+pk));
-					$('#threadToEventFields').append($("<br>"));
-				}
-			});
-			//$(".relationSelection").checkboxradio({ icon: false });
-		});
-		$("#threadToEventModal").show();
-	}
 
 	// callback to add or remove a tag
 	function toggleTag(name) {
@@ -177,9 +137,11 @@
 {% endif %}
 
 {% include 'tracker/thread.html' %}
+
+{% url 'associateEventsWithThread' as assUrl %}
 <div id="threadToEventModal" class="modal">
 Specify the events that will be associated with this thread.
-<form action="">
+<form action="{{ assUrl }}" method="GET">
 <fieldset id="threadToEventFields"></fieldset>
 <input type="submit" value="Submit changes">
 </form>

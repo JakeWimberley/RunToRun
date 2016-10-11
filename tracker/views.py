@@ -463,6 +463,49 @@ def asyncToggleFrozen(request):
             thisThread.save()
             return HttpResponse('unfrozen')
 
+def asyncAssociateEventsWithThread(request):
+    '''
+    Associate events (GET array newRelations) with thread (GET threadId).
+    Also must have GET field allMatchingEvents (all events that were represented in the form)
+    Returns status 400 and an empty string if user is not logged in.
+    Returns status 404 if event with specified ID does not exist.
+    Returns status 403 if user is not allowed to change event or thread.
+    Otherwise returns 204 (success, but no data to return)
+    '''
+    if not request.user.is_authenticated():
+        return HttpResponseBadRequest()
+    if request.method == 'GET':
+        threadId = request.GET['threadId']
+        selectedEventArray = request.GET.getlist('newRelations')
+        allEventArray = request.GET['allMatchingEvents'].split(',')
+        try:
+            threadObj = Thread.objects.get(pk=threadId)
+        except Thread.DoesNotExist: # 404
+            return HttpResponseNotFound()
+        if request.user != getThreadSteward(threadObj): # 403
+            return HttpResponseForbidden()
+        eventObjList = {}
+        # check that all the events exist -- if not don't make any changes
+        for eId in allEventArray:
+            try:
+                eventObjList[eId] = Event.objects.get(pk=eId)
+                if request.user != eventObjList[eId].owner: # 403
+                    return HttpResponseForbidden()
+            except Event.DoesNotExist:
+                return HttpResponseNotFound()
+        # Must first remove the thread from all events that were in the form,
+        # then add it back to the ones that were checked
+        for eId in allEventArray:
+            eventObj = eventObjList[eId]
+            if threadObj in eventObj.threads.all():
+                eventObj.threads.remove(threadObj)
+        for eId in selectedEventArray:
+            eventObj = eventObjList[eId]
+            eventObj.threads.add(threadObj)
+        return HttpResponse(status=204)
+    else:
+        return HttpResponseBadRequest()
+
 def getThreadSteward(thread):
     # the author of the first discussion is considered the "owner" or "steward" of the thread
     minPk = thread.discussions.all().aggregate(Min("pk"))
