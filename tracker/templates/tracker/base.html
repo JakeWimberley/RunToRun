@@ -1,4 +1,22 @@
 <!DOCTYPE html>
+{% comment %}
+    Copyright 2016, 2017 Jacob C. Wimberley.
+
+    This file is part of Weathredds.
+
+    Weathredds is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Weathredds is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Weathredds.  If not, see <http://www.gnu.org/licenses/>.
+{% endcomment %}
 {% load staticfiles %}
 <html>
 <head>
@@ -24,6 +42,6 @@ You are logged in as {{ request.user.username }} <i><a href="{% url 'logout' %}"
 </span></p>
 	{% block content %}
 	{% endblock %}
-	<p class="footer ui-corner-all">Weathredds is open-source software, licensed under the GNU General Public License, version 3.</p>
+	<p class="footer ui-corner-all">Weathredds is an open-source project originated by Jake Wimberley.<br>Licensed under the GNU General Public License, version 3.</p>
 </body>
 </html>

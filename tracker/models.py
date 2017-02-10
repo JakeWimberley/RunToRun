@@ -1,5 +1,5 @@
 """
-    Copyright 2016 Jake Wimberley.
+    Copyright 2016 Jacob C. Wimberley.
 
     This file is part of Weathredds.
 
