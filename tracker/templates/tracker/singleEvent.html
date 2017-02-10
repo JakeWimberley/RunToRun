@@ -19,8 +19,6 @@
 -->
 {% extends 'tracker/base.html' %}
 {% block content %}
-{% load static %}
-<script src="{% static "relations.js" %}"></script>
 <script>
 	document.getElementById('nameOfView').innerHTML = 'Event &quot;{{ event.title }}&quot;';
 
@@ -120,7 +118,7 @@
 			icons: { primary: "ui-icon-wrench" },
 			label: 'Change details'
 		})
-	});
+	}); // end ready()
 </script>
 <p>Created {{ event.createdDate|date:"Hi\z D M j" }} by {{ event.owner }}</p>
 <p>Date range is {{ event.describeTimeRange }}</p>
@@ -138,13 +136,6 @@
 
 {% include 'tracker/thread.html' %}
 
-{% url 'associateEventsWithThread' as assUrl %}
-<div id="threadToEventModal" class="modal">
-Specify the events that will be associated with this thread.
-<form action="{{ assUrl }}" method="GET">
-<fieldset id="threadToEventFields"></fieldset>
-<input type="submit" value="Submit changes">
-</form>
-<button onclick="$('#threadToEventModal').hide()">Cancel</button>
-</div>
+{% include 'tracker/associationModals.html' %}
+
 {% endblock content %}

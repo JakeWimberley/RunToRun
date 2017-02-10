@@ -483,14 +483,17 @@ def asyncAssociateEventsWithThread(request):
         except Thread.DoesNotExist: # 404
             return HttpResponseNotFound()
         if request.user != getThreadSteward(threadObj): # 403
-            return HttpResponseForbidden()
+            # NOTE: if http response is not 2xx, OR there is a response string, Firefox redirects to the URL given in $.get()
+            errmsg = 'Access denied. Steward of thread is ' + getThreadSteward(threadObj) + '.'
+            return HttpResponseForbidden(reason=errmsg)
         eventObjList = {}
         # check that all the events exist -- if not don't make any changes
         for eId in allEventArray:
             try:
                 eventObjList[eId] = Event.objects.get(pk=eId)
                 if request.user != eventObjList[eId].owner: # 403
-                    return HttpResponseForbidden()
+                    errmsg = 'Access denied. Owner of event is ' + str(eventObjList[eId].owner) + '.'
+                    return HttpResponseForbidden(reason=errmsg)
             except Event.DoesNotExist:
                 return HttpResponseNotFound()
         # Must first remove the thread from all events that were in the form,

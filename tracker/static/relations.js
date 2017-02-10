@@ -54,3 +54,25 @@ function populateFormThreadToEvent(whenStr,threadId) {
 	});
 	$("#threadToEventModal").show();
 }
+
+// override form action so we can handle errors
+$(function() {
+$("#threadToEventForm").submit(function(e) {
+	window.console.log('submitted...');
+	var form = $(this);
+	$.ajax({
+		url: '/async/associateEventsWithThread',
+		type: 'GET',
+		data: form.serialize(),
+		success: function(resp) {
+			window.console.log('successful');
+			$('#threadToEventFields').empty().append('Your changes have been applied. Click the Close button below.');
+		},
+		error: function(xhr, textStat, errMsg) {
+			window.console.log('failed: ' + errMsg);
+			$('#threadToEventFields').empty().append('Your requested changes cannot be applied: <i>' + errMsg + '</i> Click Close below.');
+		}
+	});
+	return false;
+})
+});

@@ -19,12 +19,12 @@
 -->
 {% extends 'tracker/base.html' %}
 {% block content %}
-{% load static %}
-<script src="{% static "relations.js" %}"></script>
 <script>
 	document.getElementById('nameOfView').innerHTML = 'View Thread';
 </script>
+
 {% include 'tracker/thread.html' %}
+
 {% for event in relEvents %}
 {% if forloop.first %}
 <p>This thread is associated with the following events:</p>
@@ -37,14 +37,6 @@
 {% endif %}
 {% endfor %}
 
-{% url 'associateEventsWithThread' as assUrl %}
-<div id="threadToEventModal" class="modal">
-Specify the events that will be associated with this thread.
-<form action="{{ assUrl }}" method="GET">
-<fieldset id="threadToEventFields"></fieldset>
-<input type="submit" value="Submit changes">
-</form>
-<button onclick="$('#threadToEventModal').hide()">Cancel</button>
-</div>
+{% include 'tracker/associationModals.html' %}
 
 {% endblock content %}
