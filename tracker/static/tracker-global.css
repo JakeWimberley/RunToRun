@@ -56,3 +56,17 @@ div.modal {
 	border: 4px solid black;
 	border-radius: 10px;
 }
+table.threadIndex {
+	border: none;
+	width: 100%;
+	text-align: left;
+}
+table.threadIndex tr.evenRow {
+	background-color: #DDD;
+}
+table.threadIndex tr.oddRow {
+	background-color: #BBB;
+}
+table.threadIndex th {
+	background-color: white;
+}

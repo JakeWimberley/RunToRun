@@ -1,0 +1,30 @@
+{# displayed date for each thread will be lastEdit for 'home' view or validDate for other views #}
+<table class="threadIndex">
+	<tr>
+		<th>Title</th>
+{% with threadIndex|first as firstThread %}
+{% if firstThread.lastEdit %}
+		<th>Last update</th>
+{% else %}
+		<th>Valid</th>
+{% endif %}
+{% endwith %}
+		<th>Discussion count</th>
+	</tr>
+{% for thread in threadIndex %}
+{% url 'singleThread' thread.id as threadUrl %}
+{% if forloop.counter|divisibleby:"2" %}
+	<tr class="evenRow">
+{% else %}
+	<tr class="oddRow">
+{% endif %}
+		<td><a href="{{ threadUrl }}">{{ thread.title }}</a></td>
+{% if thread.lastEdit %}
+		<td>{{ thread.lastEdit|date:"Hi\z D M j" }}</td>
+{% else %}
+		<td>{{ thread.validDate|date:"Hi\z D M j" }}</td>
+{% endif %}
+		<td>{{ thread.discussions.all|length }}</td>
+	</tr>
+{% endfor %}
+</table>

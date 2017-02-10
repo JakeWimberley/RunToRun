@@ -33,7 +33,6 @@
 	});
 </script>
 {% for event in events %}
-{% if event.isPublic %}
 <h2>{{ event.title }}</h2>
 <p><span class="ui-icon ui-icon-person" style="display: inline-block"></span> {{ event.owner }}</p>
 <p><span class="ui-icon ui-icon-clock" style="display: inline-block"></span> {{ event.describeTimeRange }}</p>
@@ -47,13 +46,9 @@
 {% url 'newThreadInEvent' event.id as newThreadUrl %}
 <button class="eventDetails" onclick="window.location.href='{{ eventUrl }}'">(details button)</button>
 <button class="newThread" onclick="window.location.href='{{ newThreadUrl }}'">(new thread button)</button>
-<ul>
-	{% for thread in event.threads.all %}
-		{% url 'singleThread' thread.pk as viewThreadUrl %}
-		<li><a href="{{ viewThreadUrl }}">{{ thread.title }}</a> | {{ thread.validDate|date:"Hi\z D M j" }} | {{ thread.discussions.all|length }}</li>
-	{% endfor %}
-</ul>
-{% endif %}
+{% with event.threads.all as threadIndex %}
+{% include 'tracker/threadIndex.html' %}
+{% endwith %}
 {% empty %} {# there are no events at all #}
 <p>No events have been associated with this tag.</p>
 {% endfor %}

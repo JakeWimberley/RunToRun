@@ -290,8 +290,8 @@ def singleEvent(request, _id):
 def singleTag(request, tagName):
     try:
         thisTag = Tag.objects.get(name=tagName)
-        relEvents = thisTag.events.all()
-        someArePrivate = thisTag.events.filter(isPublic=False).count() > 0
+        relEvents = thisTag.events.filter(Q(owner=request.user) | Q(isPublic=True))
+        someArePrivate = thisTag.events.exclude(owner=request.user).filter(isPublic=False).count() > 0
     except:
         relEvents = None
         someArePrivate = False
