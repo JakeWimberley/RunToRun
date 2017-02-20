@@ -18,6 +18,8 @@
 {% endcomment %}
 {# displayed date for each thread will be lastEdit for 'home' view or validDate for other views #}
 <table class="threadIndex">
+{% for thread in threadIndex %}
+{% if forloop.counter == 1 %}
 	<tr>
 		<th>Title</th>
 {% with threadIndex|first as firstThread %}
@@ -27,9 +29,9 @@
 		<th>Valid</th>
 {% endif %}
 {% endwith %}
-		<th>Discussion count</th>
+		<th>Discussions</th>
 	</tr>
-{% for thread in threadIndex %}
+{% endif %}
 {% url 'singleThread' thread.id as threadUrl %}
 {% if forloop.counter|divisibleby:"2" %}
 	<tr class="evenRow">
@@ -38,11 +40,13 @@
 {% endif %}
 		<td><a href="{{ threadUrl }}">{{ thread.title }}</a></td>
 {% if thread.lastEdit %}
-		<td>{{ thread.lastEdit|date:"Hi\z D M j" }}</td>
+		<td class="date">{{ thread.lastEdit|date:"Hi\z D M j" }}</td>
 {% else %}
-		<td>{{ thread.validDate|date:"Hi\z D M j" }}</td>
+		<td class="date">{{ thread.validDate|date:"Hi\z D M j" }}</td>
 {% endif %}
-		<td>{{ thread.discussions.all|length }}</td>
+		<td class="count">{{ thread.discussions.all|length }}</td>
 	</tr>
+{% empty %}
+	<tr><td colspan="3"><i>No recent threads</i></td></tr>
 {% endfor %}
 </table>

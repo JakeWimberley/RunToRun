@@ -51,6 +51,8 @@
 		});
 	}
 </script>
+<div class="twinScroll">
+<div class="leftTwin">
 <h2>Pinned events</h2>
 <ul>
 {% for pinnedEvent in pinned %}
@@ -58,29 +60,36 @@
 	<li><a href="{{ eventUrl }}">{{ pinnedEvent }}</a></li>
 {% endfor %}
 </ul>
+</div>
+<div class="rightTwin">
 <h2>Recent threads</h2>
 {% with recentThreads as threadIndex %}
 {% include 'tracker/threadIndex.html' %}
 {% endwith %}
-<h2>Timeline</h2>
+</div>
+</div> <!-- end twinScroll -->
+<h2 class="afterTwinScroll">Timeline</h2>
 <ul>
 {% for event in timelineEvents %}
 	<li>{{ event }}</li>
 {% endfor %}
 </ul>
-<h2>Tag cloud {{ tagScale.numEvents__max }}</h2>
-<p>{% for tag in tags %}
-{% with tag.name as tagName %}
-{% url 'singleTag' tagName as tagUrl %}
-<span class="tagText tagTextSize{{ tagDisplaySizes|dictGet:tagName }}" onclick="window.location.href='{{ tagUrl }}'">{{ tagName }}</span>
-{% endwith %}
-{% endfor %}</p>
-<h2>Start something new!</h2>
+<h2>Actions</h2>
 <div id="forms">
 	<ul>
+		<li><a href="#findTools">Find</a></li>
 		<li><a href="#newThread">Add a thread</a></li>
 		<li><a href="#newEvent">Add an event</a></li>
 	</ul>
+	<div id="findTools">
+		<h2>Tag cloud {{ tagScale.numEvents__max }}</h2>
+		<p>{% for tag in tags %}
+		{% with tag.name as tagName %}
+		{% url 'singleTag' tagName as tagUrl %}
+		<span class="tagText tagTextSize{{ tagDisplaySizes|dictGet:tagName }}" onclick="window.location.href='{{ tagUrl }}'">{{ tagName }}</span>
+		{% endwith %}
+		{% endfor %}</p>
+	</div>
 	<div id="newThread">
 		<form action="/newThread/" method="post">
 			{% csrf_token %}

@@ -43,6 +43,21 @@ span.rightHalf {
 	display: inline-block;
 	text-align: right;
 }
+div.twinScroll {
+	left: 0px;
+	width: 100%;
+}
+div.leftTwin {
+	float: left;
+	width: 50%;
+}
+div.rightTwin {
+	float: right;
+	width: 50%;
+}
+.afterTwinScroll {
+	clear: both;
+}
 span.tagTextSize1 {
 	font-size: 0.35em;
 }
@@ -88,4 +103,10 @@ table.threadIndex tr.oddRow {
 }
 table.threadIndex th {
 	background-color: white;
+}
+table.threadIndex td.count {
+	width: 7em;
+}
+table.threadIndex td.date {
+	width: 9em;
 }
