@@ -59,7 +59,7 @@ def newThread(request, setEvent=None):
     # if set, also redirect to event page, not thread page
     if request.method == 'POST':
         if setEvent is None:
-            newThread = ThreadForm(request.POST, eventChoices=Pin.objects.filter(owner=request.user), selectedChoice=None)
+            newThread = ThreadForm(request.POST, eventChoices=[x.event for x in Pin.objects.filter(owner=request.user)], selectedChoice=None)
         else:
             newThread = ThreadForm(request.POST, eventChoices=Event.objects.filter(id=setEvent), selectedChoice=setEvent)
         if newThread.is_valid():
