@@ -39,6 +39,7 @@ urlpatterns = [
     url(r'^changeEvent/(?P<pk>\d+)', ChangeEvent.as_view(), name='changeEvent'),
     url(r'^changeThread/(?P<pk>\d+)', ChangeThread.as_view(), name='changeThread'),
     url(r'^tag/([^,\\\']+)', views.singleTag, name='singleTag'),
+    url(r'^find/$', views.find, name='find'),
     url(r'^async/togglePin', views.asyncTogglePin, name='togglePin'),
     url(r'^async/toggleTag', views.asyncToggleTag, name='toggleTag'),
     url(r'^async/toggleFrozen', views.asyncToggleFrozen, name='toggleFrozen'),

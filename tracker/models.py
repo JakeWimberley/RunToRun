@@ -75,14 +75,22 @@ class Event(models.Model):
         # start/end dates are preferred if user defined them
         if self.startDate and self.endDate:
             return unicode('{0:s} to {1:s} [fixed by owner]'.format(self.startDate.strftime(dateFormatStr), self.endDate.strftime(dateFormatStr)))
+        else:
+            (start,end,numThreads) = self.getThreadStats()
+            if numThreads >= 2:
+                return unicode('{0:s} to {1:s}'.format(start.strftime(dateFormatStr), end.strftime(dateFormatStr)))
+            elif numThreads == 1:
+                return unicode('{0:s} [single thread]'.format(start.strftime(dateFormatStr)))
+            else:
+                return unicode('undefined time range')
+
+    # optional arg 'doy' will cause returned start/end to be the day of year, not actual datetime
+    def getThreadStats(self):
+        if self.startDate and self.endDate:
+            return (self.startDate,self.endDate,len(self.threads.all()))
         allThreadDates = [x.validDate for x in self.threads.all()]
         allThreadDates.sort()
-        if len(allThreadDates) >= 2:
-            return unicode('{0:s} to {1:s}'.format(allThreadDates[0].strftime(dateFormatStr), allThreadDates[-1].strftime(dateFormatStr)))
-        elif len(allThreadDates) == 1:
-            return unicode('{0:s} [single thread]'.format(allThreadDates[0].strftime(dateFormatStr)))
-        else:
-            return unicode('undefined time range')
+        return(allThreadDates[0],allThreadDates[-1],len(self.threads.all()))
 
     def __unicode__(self):
         return self.title + u' (' + self.describeTimeRange() + u')'

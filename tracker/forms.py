@@ -1,9 +1,13 @@
 from django import forms
 from functools import partial
-from .models import Thread, Event
+from .models import Thread, Event, Tag
 
 jqDateInput = forms.DateInput(attrs={'class':'uiDatepicker'})
 jqTimeInput = forms.TimeInput() # TODO maybe not necessary
+monthChoices = [
+    (1,'Jan'),(2,'Feb'),(3,'Mar'),(4,'Apr'),(5,'May'),(6,'Jun'),
+    (7,'Jul'),(8,'Aug'),(9,'Sep'),(10,'Oct'),(11,'Nov'),(12,'Dec')
+]
 
 class ThreadForm(forms.Form):
     def __init__(self,*args,**kwargs):
@@ -46,3 +50,8 @@ class ChangeThreadForm(forms.ModelForm):
     class Meta:
         model = Thread
         fields = ['title','validDate']
+
+class FindForm(forms.Form):
+    tags = forms.MultipleChoiceField(required=False,label='events matching tag(s)',widget=forms.CheckboxSelectMultiple,choices=[(x.name,x.name) for x in Tag.objects.all()])
+    textSearch = forms.CharField(required=False,label='threads containing text')
+    months = forms.MultipleChoiceField(required=False,label='return results only from these months',widget=forms.CheckboxSelectMultiple,choices=monthChoices)

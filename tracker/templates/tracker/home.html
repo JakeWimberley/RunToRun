@@ -54,12 +54,25 @@
 <div class="twinScroll">
 <div class="leftTwin">
 <h2>Pinned events</h2>
-<ul>
+<table class="threadIndex">
 {% for pinnedEvent in pinned %}
+{% if forloop.counter == 1 %}
+	<tr>
+		<th>Title</th>
+		<th>Date range</th>
+	</tr>
+{% endif %}
+{% if forloop.counter|divisibleby:"2" %}
+	<tr class="evenRow">
+{% else %}
+	<tr class="oddRow">
+{% endif %}
 {% url 'singleEvent' pinnedEvent.event.id as eventUrl %}
-	<li><a href="{{ eventUrl }}">{{ pinnedEvent }}</a></li>
+		<td><a href="{{ eventUrl }}">{{ pinnedEvent.event.title }}</a></td>
+		<td>{{ pinnedEvent.event.describeTimeRange }}</td>
+	</tr>
 {% endfor %}
-</ul>
+</table>
 </div>
 <div class="rightTwin">
 <h2>Recent threads</h2>
@@ -68,7 +81,7 @@
 {% endwith %}
 </div>
 </div> <!-- end twinScroll -->
-<h2 class="afterTwinScroll">Timeline</h2>
+<h2 style="padding-top: 24px;" class="afterTwinScroll">Timeline</h2>
 <ul>
 {% for event in timelineEvents %}
 	<li>{{ event }}</li>
@@ -77,18 +90,29 @@
 <h2>Actions</h2>
 <div id="forms">
 	<ul>
-		<li><a href="#findTools">Find</a></li>
 		<li><a href="#newThread">Add a thread</a></li>
 		<li><a href="#newEvent">Add an event</a></li>
+		<li><a href="#tagCloud">Tag cloud</a></li>
+		<li><a href="#findTools">Find</a></li>
 	</ul>
-	<div id="findTools">
-		<h2>Tag cloud {{ tagScale.numEvents__max }}</h2>
+	<div id="tagCloud">
+		<p>Click a tag to view all events associated with that tag.</p>
+		<!-- {{ tagScale.numEvents__max }} </h2> -->
 		<p>{% for tag in tags %}
 		{% with tag.name as tagName %}
 		{% url 'singleTag' tagName as tagUrl %}
 		<span class="tagText tagTextSize{{ tagDisplaySizes|dictGet:tagName }}" onclick="window.location.href='{{ tagUrl }}'">{{ tagName }}</span>
 		{% endwith %}
 		{% endfor %}</p>
+	</div>
+	<div id="findTools">
+		<form action="/find/" method="post">
+			{% csrf_token %}
+			<table>
+			{{ findForm }}
+			</table>
+			<input type="submit" value="Find matching events &amp; threads" />
+		</form>
 	</div>
 	<div id="newThread">
 		<form action="/newThread/" method="post">

@@ -18,11 +18,12 @@
 """
 from django.shortcuts import render
 from django.db.models import Q, Count, Max, Min
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseForbidden
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseForbidden, Http404
 from django.contrib.auth.decorators import login_required
 from django.views.generic.edit import UpdateView
 from .models import Discussion, Event, Pin, Thread, Tag
-from .forms import ThreadForm, DiscussionFormTextOnly, EventForm, ChangeEventForm, ChangeThreadForm
+from .forms import ThreadForm, DiscussionFormTextOnly, EventForm, ChangeEventForm, ChangeThreadForm, FindForm
+from itertools import chain
 import datetime
 import pytz
 import re
@@ -46,6 +47,7 @@ def home(request):
         'timelineEvents': timelineEvents, \
         'pinned': pinned, \
         'recentThreads': recentThreads, \
+        'findForm': FindForm(), \
         'newThread': ThreadForm(eventChoices=[x.event for x in pinned], selectedChoice=None), \
         'newEvent': EventForm(), \
         'tags': tags, \
@@ -104,24 +106,77 @@ def newThread(request, setEvent=None):
         'newThreadForm': newThread \
     })
 
-def discussionRange(request, _timeFrom, _timeTo):
-    timePattern = re.compile(r'(\d{4})(\d\d)(\d\d)_(\d\d)(\d\d)')
-    tF = timePattern.match(_timeFrom)
-    tT = timePattern.match(_timeTo)
-    if tF and tT:
-        timeFrom = datetime.datetime(int(tF.group(1), 10), int(tF.group(2), 10), int(tF.group(3), 10), int(tF.group(4), 10), int(tF.group(5), 10), second=0, tzinfo=pytz.UTC)
-        timeTo = datetime.datetime(int(tT.group(1), 10), int(tT.group(2), 10), int(tT.group(3), 10), int(tT.group(4), 10), int(tT.group(5), 10), second=59, tzinfo=pytz.UTC)
-# timeTo = datetime.datetime(tT.match(1),tT.match(2),tT.match(3),tT.match(4),tT.match(5),tzinfo=pytz.UTC)
-        vDates = [v['validDate'] for v in Discussion.objects.filter(validDate__gte=timeFrom, validDate__lte=timeTo).order_by('validDate').values('validDate').annotate(Count('validDate', distinct=True))]
-        discos = {}
-        for vDate in vDates:
-            discos[vDate] = Discussion.objects.filter(validDate=vDate).order_by('-createdDate')
+def find(request):
+    "Find events matching given tag and/or threads containing given string. Addditionally they can be constrained to given months of the year."
+    totalQ = Q()
+    if request.method == 'POST':
+        findForm = FindForm(request.POST)
+        if not findForm.is_valid():
+            return # TEST
+        # make a Q object to represent the month constraint
+        # different objects for Event and Thread due to differing field names
+        eventMonthQ = Q()
+        threadMonthQ = Q()
+        try:
+            for month in findForm.cleaned_data.get('months'):
+                eventMonthQ |= Q(startDate__month=month) | Q(endDate__month=month)
+                threadMonthQ |= Q(validDate__month=month)
+        except KeyError:
+            pass # leave eventMonthQ empty
+        except:
+            Http404('Error processing month selection')
+        # TODO could also filter based on month of component threads, to capture floating events
+        # now, if tag was specified, get its event objects.
+        # finally apply time constraint with monthQ after that
+        tagQ = Q()
+        try:
+            if len(findForm.cleaned_data.get('tags')) < 1: raise KeyError # hack
+            for tagName in findForm.cleaned_data.get('tags'):
+                tagQ &= Q(name=tagName)
+            # this part is a C.F. to get a list of unique events having one of the defined tags
+            foundEventDict = {}
+            for tag in Tag.objects.filter(tagQ):
+                for event in tag.events.filter(eventMonthQ).iterator():
+                    if event.owner == request.user or event.isPublic:
+                        foundEventDict[event.pk] = event
+            foundEvents = foundEventDict.values()
+        except KeyError: # no tags, filter only by month
+            foundEvents = Event.objects.filter(eventMonthQ)
+        except:
+            Http404('Error processing tag selection')
+        # handle threads separately; this will allow content from threads in floating events to be viewed
+        foundThreads = []
+        try:
+            textSearchStr = findForm.cleaned_data['textSearch']
+            for thread in Thread.objects.filter(threadMonthQ):
+                if len(thread.discussions.filter(text__icontains=textSearchStr)):
+                    foundThreads.append(thread)
+        except KeyError:
+            pass # no text specified, so no threads will be returned
+        except:
+            Http404('Error processing text search string')
+        return render(request, 'tracker/find.html', {
+            'foundEvents': foundEvents,
+            'foundThreads': foundThreads,
+        })
+    """
+            datetimePattern = re.compile(r'^(\d{4})(\d\d)(\d\d)_(\d\d)(\d\d)$')
+            dtF = datetimePattern.match(request.POST['dtFrom'])
+            dtT = datetimePattern.match(request.POST['dtTo'])
+            if dtF and dtT:
+                timeFrom = datetime.datetime(int(dtF.group(1), 10), int(dtF.group(2), 10), int(dtF.group(3), 10), int(dtF.group(4), 10), int(dtF.group(5), 10), second=0, tzinfo=pytz.UTC)
+                timeTo = datetime.datetime(int(dtT.group(1), 10), int(dtT.group(2), 10), int(dtT.group(3), 10), int(dtT.group(4), 10), int(dtT.group(5), 10), second=59, tzinfo=pytz.UTC)
+            vDates = [v['validDate'] for v in Thread.objects.filter(validDate__gte=timeFrom, validDate__lte=timeTo).order_by('validDate').values('validDate').annotate(Count('validDate', distinct=True))]
+            discos = {}
+            for vDate in vDates:
+                discos[vDate] = Discussion.objects.filter(validDate=vDate).order_by('-createdDate')
     return render(request, 'tracker/discussionRange.html', { \
         'validDates': vDates, \
         'discussions': discos, \
         'timeFrom': timeFrom, \
         'timeTo': timeTo
     })
+    """
 
 @login_required
 def extendThread(request, _id):
