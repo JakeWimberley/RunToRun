@@ -22,6 +22,8 @@
 <script>
 	$(function() {
 		$( "#forms" ).tabs();
+		$( "#findTags input" ).checkboxradio({icon: false});
+		$( "#findMonths input" ).checkboxradio({icon: false});
 		$( "#id__startDate" ).blur(function() { getThreadList(); });
 		$( "#id__startTime" ).blur(function() { getThreadList(); });
 		$( "#id__endDate" ).blur(function() { getThreadList(); });

@@ -19,8 +19,9 @@
 {% load static %}
 <script src="{% static "relations.js" %}"></script>
 <div id="threadToEventModal" class="modal">
-The following events that will be associated with this thread.<br>
-Use the checkboxes to change the associations.<br>
+The time ranges of the following events encompass this thread's valid time.<br>
+The checked events already are associated with this thread.<br>
+You can change the associations using the checkboxes and Submit button.<br>
 <!-- TODO: change form s.t. submit button works async-ly: call associate view to make db changes and then populateFormThreadToEvent to reload contents of modal -->
 <form id="threadToEventForm">
 <fieldset id="threadToEventFields"></fieldset>

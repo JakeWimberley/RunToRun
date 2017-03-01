@@ -110,3 +110,18 @@ table.threadIndex td.count {
 table.threadIndex td.date {
 	width: 9em;
 }
+ul#findTags, ul#findMonths {
+	list-style: none;
+	padding-left: 0;
+}
+ul#findTags li, ul#findMonths li {
+	display: inline;
+}
+ul#findTags label, ul#findMonths label {
+	font-size: 0.8em;
+}
+
+/* jQuery UI overrides */
+.ui-button {
+	margin-bottom: 6px;
+}

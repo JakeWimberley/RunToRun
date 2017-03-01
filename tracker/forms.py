@@ -6,7 +6,8 @@ jqDateInput = forms.DateInput(attrs={'class':'uiDatepicker'})
 jqTimeInput = forms.TimeInput() # TODO maybe not necessary
 monthChoices = [
     (1,'Jan'),(2,'Feb'),(3,'Mar'),(4,'Apr'),(5,'May'),(6,'Jun'),
-    (7,'Jul'),(8,'Aug'),(9,'Sep'),(10,'Oct'),(11,'Nov'),(12,'Dec')
+    (7,'Jul'),(8,'Aug'),(9,'Sep'),(10,'Oct'),(11,'Nov'),(12,'Dec'),
+    (99,'All year') # handled as special case in find view
 ]
 
 class ThreadForm(forms.Form):
@@ -52,6 +53,6 @@ class ChangeThreadForm(forms.ModelForm):
         fields = ['title','validDate']
 
 class FindForm(forms.Form):
-    tags = forms.MultipleChoiceField(required=False,label='events matching tag(s)',widget=forms.CheckboxSelectMultiple,choices=[(x.name,x.name) for x in Tag.objects.all()])
-    textSearch = forms.CharField(required=False,label='threads containing text')
-    months = forms.MultipleChoiceField(required=False,label='return results only from these months',widget=forms.CheckboxSelectMultiple,choices=monthChoices)
+    tags = forms.MultipleChoiceField(required=False,label='return events with tag(s)',widget=forms.CheckboxSelectMultiple(attrs={'id':'findTags'}),choices=[(x.name,x.name) for x in Tag.objects.all()])
+    textSearch = forms.CharField(required=False,label='return threads containing text')
+    months = forms.MultipleChoiceField(required=False,label='get results from only these months',widget=forms.CheckboxSelectMultiple(attrs={'id':'findMonths'}),choices=monthChoices)

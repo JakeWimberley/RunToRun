@@ -115,10 +115,16 @@ def find(request):
             return # TEST
         # make a Q object to represent the month constraint
         # different objects for Event and Thread due to differing field names
-        eventMonthQ = Q()
-        threadMonthQ = Q()
+        # initialize to an impossible month so filters return nothing
+        eventMonthQ = Q(startDate__month=13)
+        threadMonthQ = Q(validDate__month=13)
         try:
             for month in findForm.cleaned_data.get('months'):
+                # 99 specified in form as 'all months', so ignore all other month settings
+                if month == '99':
+                    eventMonthQ = Q()
+                    threadMonthQ = Q()
+                    break
                 eventMonthQ |= Q(startDate__month=month) | Q(endDate__month=month)
                 threadMonthQ |= Q(validDate__month=month)
         except KeyError:
@@ -149,7 +155,7 @@ def find(request):
         try:
             textSearchStr = findForm.cleaned_data['textSearch']
             for thread in Thread.objects.filter(threadMonthQ):
-                if len(thread.discussions.filter(text__icontains=textSearchStr)):
+                if textSearchStr.lower() in thread.title.lower() or len(thread.discussions.filter(text__icontains=textSearchStr)):
                     foundThreads.append(thread)
         except KeyError:
             pass # no text specified, so no threads will be returned
