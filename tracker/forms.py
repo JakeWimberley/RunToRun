@@ -2,8 +2,9 @@ from django import forms
 from functools import partial
 from .models import Thread, Event, Tag
 
+# JS/JQuery will be present in template to stylize these inputs
 jqDateInput = forms.DateInput(attrs={'class':'uiDatepicker'})
-jqTimeInput = forms.TimeInput() # TODO maybe not necessary
+jqTimeInput = forms.TimeInput(attrs={'class':'timeBox'})
 monthChoices = [
     (1,'Jan'),(2,'Feb'),(3,'Mar'),(4,'Apr'),(5,'May'),(6,'Jun'),
     (7,'Jul'),(8,'Aug'),(9,'Sep'),(10,'Oct'),(11,'Nov'),(12,'Dec'),

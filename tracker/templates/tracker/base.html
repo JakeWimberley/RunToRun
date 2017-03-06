@@ -27,9 +27,19 @@
 	<script src="{% static "jquery-ui.min.js" %}"></script>
 	<link href="https://fonts.googleapis.com/css?family=Noto+Sans:400,700" rel="stylesheet">
 	<script>
+
 $( document ).ready(function() {
 	$(".uiDatepicker").datepicker({
 		dateFormat: 'yy-mm-dd'
+	});
+	$(".timeBox").after(function() {
+			var targetBox = $(this);
+			// reverse order due to after() always referring to targetBox
+			targetBox.after($('<span/>').html('1800 ').click(function() { targetBox.val('1800'); }));
+			targetBox.after($('<span/>').html('1200, ').click(function() { targetBox.val('1200'); }));
+			targetBox.after($('<span/>').html('0600, ').click(function() { targetBox.val('0600'); }));
+			targetBox.after($('<span/>').html('0000, ').click(function() { targetBox.val('0000'); }));
+			targetBox.after(' <i>or click a time:</i> ');
 	});
 });
 	</script>
@@ -42,6 +52,6 @@ You are logged in as {{ request.user.username }} <i><a href="{% url 'logout' %}"
 </span></p>
 	{% block content %}
 	{% endblock %}
-	<p class="footer ui-corner-all">Weathredds is an open-source project originated by Jake Wimberley. <b>Version 0.3.1</b><br>Licensed under the <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU General Public License.</a></p>
+	<p class="footer ui-corner-all"><span class="leftHalf">Weathredds is an open-source project originated by Jake Wimberley. <b>Version 0.3.1</b><br>Licensed under the <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU General Public License.</a></span><span class="rightHalf"><a href="http://www.djangoproject.com/"><img src="https://www.djangoproject.com/m/img/badges/djangomade124x25.gif" border="0" alt="Made with Django." title="Made with Django." /></a></span></p>
 </body>
 </html>
