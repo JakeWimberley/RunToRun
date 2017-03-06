@@ -76,6 +76,9 @@ span.tagTextSize5 {
 span.tagText {
 	cursor: pointer;
 }
+span.datetimePresets {
+	font-size: 0.75em;
+}
 a.noUnderline {
   text-decoration: none;
 }

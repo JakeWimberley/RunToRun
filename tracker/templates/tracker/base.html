@@ -29,16 +29,32 @@
 	<script>
 
 $( document ).ready(function() {
+
+	// jQuery-ize the date selection boxes, and create datetime preset buttons next to them
 	$(".uiDatepicker").datepicker({
 		dateFormat: 'yy-mm-dd'
+	}).after(function() {
+		var dateBox = $(this);
+		var dateId = dateBox.attr('id');
+		var timeId = dateId.replace('Date','Time'); // e.g. id__startDate becomes id__startTime
+		var timeBox = $('#' + timeId);
+{# so we can do the dirty work of date calculations in Python #}
+{% for dt in presetDatetimes %}
+		$(this).after($('<span/>')
+			.html("{{ dt.name }}" + ' ')
+			.addClass('datetimePresets')
+			.click(function() { dateBox.val('{{ dt.date }}'); timeBox.val('{{ dt.time }}'); }));
+{% endfor %}
 	});
+
+	// now create the time preset buttons next to the time boxes
 	$(".timeBox").after(function() {
 			var targetBox = $(this);
 			// reverse order due to after() always referring to targetBox
-			targetBox.after($('<span/>').html('1800 ').click(function() { targetBox.val('1800'); }));
-			targetBox.after($('<span/>').html('1200, ').click(function() { targetBox.val('1200'); }));
-			targetBox.after($('<span/>').html('0600, ').click(function() { targetBox.val('0600'); }));
-			targetBox.after($('<span/>').html('0000, ').click(function() { targetBox.val('0000'); }));
+			targetBox.after($('<span/>').html('1800 ').addClass('datetimePresets').click(function() { targetBox.val('1800'); }));
+			targetBox.after($('<span/>').html('1200, ').addClass('datetimePresets').click(function() { targetBox.val('1200'); }));
+			targetBox.after($('<span/>').html('0600, ').addClass('datetimePresets').click(function() { targetBox.val('0600'); }));
+			targetBox.after($('<span/>').html('0000, ').addClass('datetimePresets').click(function() { targetBox.val('0000'); }));
 			targetBox.after(' <i>or click a time:</i> ');
 	});
 });

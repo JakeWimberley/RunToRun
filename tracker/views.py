@@ -52,6 +52,7 @@ def home(request):
         'newEvent': EventForm(), \
         'tags': tags, \
         'tagDisplaySizes': tagDisplaySizes, \
+        'presetDatetimes': getDatetimePresets()
     })
 
 @login_required
@@ -584,3 +585,17 @@ def threadIsAccessible(thread, user):
         for event in thread.event_set.all():
             if event.isPublic: return True
     return False
+
+def getDatetimePresets():
+    now = datetime.datetime.utcnow()
+    presetList = []
+    ### STARTHERE calculate Day 2, Day 2 night, etc.
+    # reverse order due to use of jQuery .after() method to place these into page; first period 12 h out
+    for period in range(14,0,-1):
+        periodDatetime = now + datetime.timedelta(hours=12*period)
+        presetList.append({
+            'name': '{0:s}'.format(periodDatetime.strftime("%a-%Hz")),
+            'date': periodDatetime.strftime("%Y%m%d"),
+            'time': periodDatetime.strftime("%H%M"),
+        })
+    return presetList
