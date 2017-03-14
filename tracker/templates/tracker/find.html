@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--
+    Copyright 2017 Jacob C. Wimberley.
+
+    This file is part of Weathredds.
+
+    Weathredds is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Weathredds is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Weathredds.  If not, see <http://www.gnu.org/licenses/>.
+-->
+{% extends 'tracker/base.html' %}
+{% block content %}
+
+<script>
+	document.getElementById('nameOfView').innerHTML = 'Find';
+	$(function() {
+		$("button.eventDetails").button({
+			icons: { primary: "ui-icon-comment" },
+			label: 'Details'
+		});
+		$("button.newThread").button({
+			icons: { primary: "ui-icon-pencil" },
+			label: 'New thread'
+		});
+	});
+</script>
+
+<h1>Matching events</h1>
+
+{% for event in foundEvents %}
+<table style="margin-bottom: 10px; width: 100%">
+	<tr>
+		<th rowspan="3" style="text-align: left; font-size: 26px; padding-right: 48px;">{{ event.title }}</th>
+		<td><span class="ui-icon ui-icon-person" style="display: inline-block"></span> {{ event.owner }}</td>
+		<th rowspan="3" style="text-align: right; padding-left: 48px;">
+{% url 'singleEvent' event.pk as eventUrl %}
+{% url 'newThreadInEvent' event.id as newThreadUrl %}
+		<button class="eventDetails" onclick="window.location.href='{{ eventUrl }}'">(details button)</button>
+		<button class="newThread" onclick="window.location.href='{{ newThreadUrl }}'">(new thread button)</button>
+		</th>
+	</tr>
+	<tr>
+		<td><span class="ui-icon ui-icon-clock" style="display: inline-block"></span> {{ event.describeTimeRange }}</td>
+	</tr>
+	<tr>
+		<td><span class="ui-icon ui-icon-tag" style="display: inline-block"></span>
+{% for tag in event.tag_set.all %}
+{% url 'singleTag' tag.name as tagUrl %}
+			<button onclick="window.location.href='{{ tagUrl }}'">{{ tag.name }}</button>
+{% empty %}
+No tags
+{% endfor %}
+		</td>
+	</tr>
+</table>
+{% with event.threads.all as threadIndex %}
+{% include 'tracker/threadIndex.html' %}
+{% endwith %}
+<p style="padding-top: 36px;">&nbsp;</p>
+{% empty %} {# there are no events at all #}
+<p>No matching events found.</p>
+{% endfor %}
+
+<h1>Matching threads</h1>
+{% with foundThreads as threadIndex %}
+{% include 'tracker/threadIndex.html' %}
+{% endwith %}
+
+{% endblock content %}
