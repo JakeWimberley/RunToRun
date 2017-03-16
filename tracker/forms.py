@@ -40,8 +40,9 @@ class EventForm(forms.Form):
     _endDate = forms.DateField(required=False,label='end date (UTC, optional unless start date defined)',widget=jqDateInput)
     _endTime = forms.TimeField(required=False,label='end time (UTC, optional)',widget=jqTimeInput,input_formats=['%H:%M','%H%M'])
     # thread choice field will be populated asynchronously based on time specs
-    # NOTE choices code may be associated with a migration problem; not sure
+    # NOTE you will have to comment this out when starting a new database, then uncomment after migrate
     _threadChoices = forms.MultipleChoiceField(label='associate with threads (optional)',required=False,choices=[(x.id,str(x)) for x in Thread.objects.all()])
+    #_threadChoices = forms.MultipleChoiceField(label='associate with threads (optional)',required=False)
 
 class ChangeEventForm(forms.ModelForm):
     class Meta:
@@ -54,6 +55,10 @@ class ChangeThreadForm(forms.ModelForm):
         fields = ['title','validDate']
 
 class FindForm(forms.Form):
+    # NOTE you will have to comment this out when starting a new database, then uncomment after migrate
     tags = forms.MultipleChoiceField(required=False,label='return events with tag(s)',widget=forms.CheckboxSelectMultiple(attrs={'id':'findTags'}),choices=[(x.name,x.name) for x in Tag.objects.all()])
+    #tags = forms.MultipleChoiceField(required=False,label='return events with tag(s)',widget=forms.CheckboxSelectMultiple(attrs={'id':'findTags'}))
+    textSearch = forms.CharField(required=False,label='return threads containing text')
+    months = forms.MultipleChoiceField(required=False,label='get results from only these months',widget=forms.CheckboxSelectMultiple(attrs={'id':'findMonths'}),choices=monthChoices)
     textSearch = forms.CharField(required=False,label='return threads containing text')
     months = forms.MultipleChoiceField(required=False,label='get results from only these months',widget=forms.CheckboxSelectMultiple(attrs={'id':'findMonths'}),choices=monthChoices)

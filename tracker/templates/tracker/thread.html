@@ -57,8 +57,8 @@ $( function() {
 			$("button#change{{key}}").hide();
 	{% endif %}
 	$("button#freeze{{key}}").click(function() {
-		$.get('/async/toggleFrozen', { thread: {{ key }} }, function(data) {
-			if (data == 'unfrozen') {
+		$.get('{% url "toggleFrozen" %}', { thread: {{ key }} }, function(data) {
+			if (data == 'unfrozen') { // caveman lawyer
 				$("button#freeze{{key}}").button({
 					icons: { primary: "ui-icon-locked" },
 					label: 'Freeze'

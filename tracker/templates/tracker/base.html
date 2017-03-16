@@ -45,7 +45,7 @@ $( document ).ready(function() {
 			.addClass('datetimePresets')
 			.click(function() { dateBox.val('{{ dt.date }}'); timeBox.val('{{ dt.time }}'); }));
 {% endfor %}
-	});
+	}).after(' <i>or choose period:</i> ');
 
 	// now create the time preset buttons next to the time boxes
 	$(".timeBox").after(function() {

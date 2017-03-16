@@ -43,7 +43,8 @@
 			toStr = $('#id__endDate').val() + '_' + $('#id__endTime').val();
 		} else return;
 		//console.log('fromStr='+fromStr+' '+'toStr='+toStr);
-		$.get('/async/threadsForPeriod', { from: fromStr, to: toStr }, function(newOptions) {
+		//$.get('/async/threadsForPeriod', { from: fromStr, to: toStr }, function(newOptions) {
+		$.get('{% url "threadsForPeriod" %}', { from: fromStr, to: toStr }, function(newOptions) {
 			// data returned is JSON giving id,name pairs
 			$('#id__threadChoices').empty();
 			$.each(newOptions, function(id,name) {
@@ -108,7 +109,7 @@
 		{% endfor %}</p>
 	</div>
 	<div id="findTools">
-		<form action="/find/" method="post">
+		<form action="{% url 'find' %}" method="post">
 			{% csrf_token %}
 			<table>
 			{{ findForm }}
@@ -117,7 +118,7 @@
 		</form>
 	</div>
 	<div id="newThread">
-		<form action="/newThread/" method="post">
+		<form action="{% url 'newThread' %}" method="post">
 			{% csrf_token %}
 			<table>
 			{{ newThread }}
@@ -126,7 +127,7 @@
 		</form>
 	</div>
 	<div id="newEvent">
-		<form action="/newEvent/" method="post">
+		<form action="{% url 'newEvent' %}" method="post">
 			{% csrf_token %}
 			<table id="newEventForm">
 			{{ newEvent }}

@@ -21,6 +21,7 @@ from django.db.models import Q, Count, Max, Min
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseForbidden, Http404
 from django.contrib.auth.decorators import login_required
 from django.views.generic.edit import UpdateView
+from django.core.urlresolvers import reverse
 from .models import Discussion, Event, Pin, Thread, Tag
 from .forms import ThreadForm, DiscussionFormTextOnly, EventForm, ChangeEventForm, ChangeThreadForm, FindForm
 from itertools import chain
@@ -84,20 +85,21 @@ def newThread(request, setEvent=None):
             for e in _eventIds:
                 Event.objects.get(id=e).threads.add(threadObj)
             if setEvent is None:
-                return HttpResponseRedirect('/thread/{0:d}'.format(threadObj.pk))
+                return HttpResponseRedirect(reverse('singleThread', args=[threadObj.pk]))
+                #return HttpResponseRedirect('thread/{0:d}'.format(threadObj.pk))
             else:
-                return HttpResponseRedirect('/event/' + setEvent)
+                return HttpResponseRedirect(reverse('singleEvent', args=[setEvent]))
     else:
         # TODO eventChoices should be set to all public events that the valid time falls in
         if setEvent is None:
             newThread = ThreadForm(eventChoices=Pin.objects.filter(owner=request.user), selectedChoice=None)
-            formAction = '/newThread/'
+            formAction = reverse('newThread')
         else:
             # specified event must be public, or owned by user, in order to continue
             eventsRequested = Event.objects.filter(id=setEvent)
             if eventsRequested[0].owner == request.user or eventsRequested[0].isPublic:
                 newThread = ThreadForm(eventChoices=eventsRequested, selectedChoice=setEvent)
-                formAction = '/newThreadInEvent/' + setEvent
+                formAction = reverse('newThreadInEvent', args=[setEvent])
             else:
                 return render(request, 'tracker/accessDenied.html', {
                     'reason': 'This event belongs to another user, and that user has chosen to keep it private.'
@@ -203,7 +205,7 @@ def extendThread(request, _id):
             discoObj.save()
             parent.discussions.add(discoObj)
             parent.save()
-            return HttpResponseRedirect('/thread/{0:d}'.format(parent.pk))
+            return HttpResponseRedirect(reverse('singleThread', args=[parent.pk]))
     else:
         textBox = DiscussionFormTextOnly()
     return render(request, 'tracker/extendThread.html', {
@@ -254,7 +256,7 @@ def newEvent(request):
             if _isPinned:
                 pin = Pin(owner=request.user, event=obj)
                 pin.save()
-            return HttpResponseRedirect('/event/{0:d}'.format(obj.id))
+            return HttpResponseRedirect(reverse('singleEvent', args=[obj.id]))
     else:
         newEvent = EventForm()
     return render(request, 'tracker/newEvent.html', { \
@@ -271,7 +273,7 @@ class ChangeEvent(UpdateView):
         if self.request.user.is_authenticated: 
             if self.request.user == self.object.owner:
                 self.object = form.save()
-                return HttpResponseRedirect('/event/{0:d}'.format(self.object.pk))
+            	return HttpResponseRedirect(reverse('singleEvent', args=[self.object.pk]))
             else:
                 return render(self.request, 'tracker/accessDenied.html', {
                     'reason': 'You are not allowed to change an event you don\'t own.'
@@ -296,7 +298,7 @@ class ChangeThread(UpdateView):
                 })
             elif self.request.user == getThreadSteward(self.object):
                 self.object = form.save()
-                return HttpResponseRedirect('/thread/{0:d}'.format(self.object.pk))
+            	return HttpResponseRedirect(reverse('singleThread', args=[self.object.pk]))
             else:
                 return render(self.request, 'tracker/accessDenied.html', {
                     'reason': "You are not allowed to change a thread for which you aren't the steward."
@@ -589,13 +591,21 @@ def threadIsAccessible(thread, user):
 def getDatetimePresets():
     now = datetime.datetime.utcnow()
     presetList = []
-    ### STARTHERE calculate Day 2, Day 2 night, etc.
     # reverse order due to use of jQuery .after() method to place these into page; first period 12 h out
-    for period in range(14,0,-1):
-        periodDatetime = now + datetime.timedelta(hours=12*period)
+    baseDatetime = now.replace(tzinfo=pytz.UTC).astimezone(pytz.timezone('US/Eastern'))
+    for period in range(13,-1,-1):
+        periodDatetime = baseDatetime + datetime.timedelta(hours=12*period)
+        if periodDatetime.hour < 6:
+            # make name of day same as previous day
+            periodDatetime -= datetime.timedelta(hours=12)
+            pdName = periodDatetime.strftime('%a') + '-Nt'
+        elif periodDatetime.hour >= 18:
+            pdName = periodDatetime.strftime('%a') + '-Nt'
+        else:
+            pdName = periodDatetime.strftime('%a')
         presetList.append({
-            'name': '{0:s}'.format(periodDatetime.strftime("%a-%Hz")),
-            'date': periodDatetime.strftime("%Y%m%d"),
+            'name': pdName,
+            'date': periodDatetime.strftime("%Y-%m-%d"),
             'time': periodDatetime.strftime("%H%M"),
         })
     return presetList

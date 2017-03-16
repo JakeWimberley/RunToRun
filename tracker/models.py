@@ -82,15 +82,18 @@ class Event(models.Model):
             elif numThreads == 1:
                 return unicode('{0:s} [single thread]'.format(start.strftime(dateFormatStr)))
             else:
-                return unicode('undefined time range')
+                return unicode('undefined')
 
     # optional arg 'doy' will cause returned start/end to be the day of year, not actual datetime
     def getThreadStats(self):
+	numThreads = len(self.threads.all())
         if self.startDate and self.endDate:
-            return (self.startDate,self.endDate,len(self.threads.all()))
+            return (self.startDate,self.endDate,numThreads)
+	if numThreads == 0:
+            return (None,None,0)
         allThreadDates = [x.validDate for x in self.threads.all()]
         allThreadDates.sort()
-        return(allThreadDates[0],allThreadDates[-1],len(self.threads.all()))
+        return(allThreadDates[0],allThreadDates[-1],numThreads)
 
     def __unicode__(self):
         return self.title + u' (' + self.describeTimeRange() + u')'

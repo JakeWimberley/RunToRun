@@ -24,7 +24,7 @@
 
 	// callback to add or remove a tag
 	function toggleTag(name) {
-		$.get('/async/toggleTag', { event: {{ event.id }}, tagName: name }, function(data) {
+		$.get('{% url "toggleTag" %}', { event: {{ event.id }}, tagName: name }, function(data) {
 			// data returned is a comma-delim list for makeTagButtons()
 			makeTagButtons(data);
 			$('#newTagEntry').val('');
@@ -96,7 +96,7 @@
 		});
 {% endif %}
 		$("button#pin").click(function() {
-			$.get('/async/togglePin', { event: {{ event.id }} }, function(data) {
+			$.get('{% url "togglePin" %}', { event: {{ event.id }} }, function(data) {
 				if (data == 'pinned') {
 					$("button#pin").button({
 						icons: { primary: "ui-icon-pin-w" },

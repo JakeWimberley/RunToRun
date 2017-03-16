@@ -21,7 +21,7 @@
 <script>
 	document.getElementById('nameOfView').innerHTML = 'Create a new event';
 </script>
-<form action="/newEvent/" method="post">
+<form action="{% url 'newEvent' %}" method="post">
   {% csrf_token %}
   <table>
   {{ newEventForm }}
