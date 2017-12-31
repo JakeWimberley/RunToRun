@@ -597,8 +597,8 @@ def getDatetimePresets():
         periodDatetime = baseDatetime + datetime.timedelta(hours=12*period)
         if periodDatetime.hour < 6:
             # make name of day same as previous day
-            periodDatetime -= datetime.timedelta(hours=12)
-            pdName = periodDatetime.strftime('%a') + '-Nt'
+            previousDayDatetime = periodDatetime - datetime.timedelta(hours=12)
+            pdName = previousDayDatetime.strftime('%a') + '-Nt'
         elif periodDatetime.hour >= 18:
             pdName = periodDatetime.strftime('%a') + '-Nt'
         else:
